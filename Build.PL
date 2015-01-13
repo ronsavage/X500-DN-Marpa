@@ -26,9 +26,9 @@ EOF
 
 $class -> new
 (
-	module_name    => 'Text::Balanced::Marpa',
+	module_name    => 'X500::DN::Marpa',
 	license        => 'artistic_2',
-	dist_abstract  => 'Extract delimited text sequences from strings',
+	dist_abstract  => 'Parse X.500 DNs',
 	dist_author    => 'Ron Savage <ron@savage.net.au>',
 	build_requires =>
 	{
@@ -43,7 +43,7 @@ $class -> new
 	{
 		resources =>
 		{
-			repository => 'https://github.com/ronsavage/Text-Balanced-Marpa',
+			repository => 'https://github.com/ronsavage/X500-DN-Marpa',
 		},
 	},
 	requires =>
@@ -52,6 +52,7 @@ $class -> new
 		'Marpa::R2'       => 2.096000,
 		'Moo'             => 1.006000,
 		'open'            => 0,
+		'Set::Array'      => 0.30,
 		'strict'          => 0,
 		'Tree'            => 1.06,
 		'Try::Tiny'       => 0.09,
@@ -61,7 +62,7 @@ $class -> new
 	},
 	resources =>
 	{
-		bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Text-Balanced-Marpa',
+		bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=X500-DN-Marpa',
 		license    => 'http://opensource.org/licenses/Artistic-2.0',
 	},
 ) -> create_build_script();

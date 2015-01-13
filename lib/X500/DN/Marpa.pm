@@ -15,8 +15,6 @@ use Const::Exporter constants =>
 	exhaustion_is_fatal =>  8,
 ];
 
-use Data::Dumper::Concise; # For Dumper().
-
 use Marpa::R2;
 
 use Moo;
@@ -473,7 +471,7 @@ sub parse
 
 =head1 NAME
 
-C<Text::Balanced::Marpa> - Extract delimited text sequences from strings
+C<X500-DN-Marpa> - Parse X.500 DNs
 
 =head1 Synopsis
 
@@ -610,7 +608,7 @@ This is the printout of synopsis.pl:
 
 =head1 Description
 
-L<Text::Balanced::Marpa> provides a L<Marpa::R2>-based parser for extracting delimited text
+L<X500-DN-Marpa> provides a L<Marpa::R2>-based parser for extracting delimited text
 sequences from strings.
 
 See the L</FAQ> for various topics, including:
@@ -670,15 +668,15 @@ for help on unpacking and installing distros.
 
 =head1 Installation
 
-Install L<Text::Balanced::Marpa> as you would any C<Perl> module:
+Install L<X500-DN-Marpa> as you would any C<Perl> module:
 
 Run:
 
-	cpanm Text::Balanced::Marpa
+	cpanm X500-DN-Marpa
 
 or run:
 
-	sudo cpan Text::Balanced::Marpa
+	sudo cpan X500-DN-Marpa
 
 or unpack the distro, and then either:
 
@@ -696,9 +694,9 @@ or:
 
 =head1 Constructor and Initialization
 
-C<new()> is called as C<< my($parser) = Text::Balanced::Marpa -> new(k1 => v1, k2 => v2, ...) >>.
+C<new()> is called as C<< my($parser) = X500-DN-Marpa -> new(k1 => v1, k2 => v2, ...) >>.
 
-It returns a new object of type C<Text::Balanced::Marpa>.
+It returns a new object of type C<X500-DN-Marpa>.
 
 Key-value pairs accepted in the parameter list (see corresponding methods for details
 [e.g. L</text([$string])>]):
@@ -951,7 +949,7 @@ See t/perl.delimiters.t.
 
 Firstly, to make these constants available, you must say:
 
-	use Text::Balanced::Marpa ':constants';
+	use X500-DN-Marpa ':constants';
 
 Secondly, more detail on errors and warnings can be found at L</error_number()>.
 
@@ -1146,17 +1144,17 @@ Perl does.
 
 =head1 Repository
 
-L<https://github.com/ronsavage/Text-Balanced-Marpa>
+L<https://github.com/ronsavage/X500-DN-Marpa>
 
 =head1 Support
 
 Email the author, or log a bug on RT:
 
-L<https://rt.cpan.org/Public/Dist/Display.html?Name=Text::Balanced::Marpa>.
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=X500-DN-Marpa>.
 
 =head1 Author
 
-L<Text::Balanced::Marpa> was written by Ron Savage I<E<lt>ron@savage.net.auE<gt>> in 2014.
+L<X500-DN-Marpa> was written by Ron Savage I<E<lt>ron@savage.net.auE<gt>> in 2014.
 
 Marpa's homepage: L<http://savage.net.au/Marpa.html>.
 

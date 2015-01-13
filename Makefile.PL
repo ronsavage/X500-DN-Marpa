@@ -13,19 +13,19 @@ my(%params) =
 	($] ge '5.005') ?
 	(
 		AUTHOR   => 'Ron Savage (ron@savage.net.au)',
-		ABSTRACT => 'Extract delimited text sequences from strings',
+		ABSTRACT => 'Parse X.500 DNs',
 	) : (),
 	clean =>
 	{
-		FILES => 'blib/* Makefile MANIFEST Text-Balanced-Marpa-*'
+		FILES => 'blib/* Makefile MANIFEST X500-DN-Marpa-*'
 	},
 	dist =>
 	{
 		COMPRESS => 'gzip',
 		SUFFIX   => 'gz'
 	},
-	DISTNAME  => 'Text-Balanced-Marpa',
-	NAME      => 'Text::Balanced::Marpa',
+	DISTNAME  => 'X500-DN-Marpa',
+	NAME      => 'X500::DN::Marpa',
 	PL_FILES  => {},
 	PREREQ_PM =>
 	{
@@ -33,6 +33,7 @@ my(%params) =
 		'Marpa::R2'       => 2.096000,
 		'Moo'             => 1.006000,
 		'open'            => 0,
+		'Set::Array'      => 0.30,
 		'strict'          => 0,
 		'Test::More'      => 1.001006,
 #		'Test::Pod'       => 1.45, # Make it optional. See xt/author/pod.t
@@ -42,7 +43,8 @@ my(%params) =
 		'utf8'            => 0,
 		'warnings'        => 0,
 	},
-	VERSION_FROM => 'lib/Text/Balanced/Marpa.pm',
+	VERSION_FROM => 'lib/X500/DN		'Set::Array'      => 0.30,
+/Marpa.pm',
 );
 
 if ( ($ExtUtils::MakeMaker::VERSION =~ /^\d\.\d\d$/) && ($ExtUtils::MakeMaker::VERSION > 6.30) )
@@ -60,13 +62,13 @@ if ($ExtUtils::MakeMaker::VERSION ge '6.46')
 		},
 		resources   =>
 		{
-			bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Text-Balanced-Marpa',
+			bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=X500-DN-Marpa',
 			license    => 'http://opensource.org/licenses/Artistic-2.0',
 			repository =>
 			{
 				type => 'git',
-				url  => 'https://github.com/ronsavage/Text-Balanced-Marpa.git',
-				web  => 'https://github.com/ronsavage/Text-Balanced-Marpa',
+				url  => 'https://github.com/ronsavage/X500-DN-Marpa.git',
+				web  => 'https://github.com/ronsavage/X500-DN-Marpa',
 			},
 		},
 	};
