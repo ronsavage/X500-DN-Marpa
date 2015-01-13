@@ -424,16 +424,23 @@ sub parse
 
 				$count++;
 
+				# This line uses $$item{value}, not $$item{type}!
+				# $$item{type} takes these values:
+				# Count  Type
+				#     1  type
+				#     2  value
+				#     3  type
+				#     4  value
+				#   ...
+
+				$value = join('', @{$self -> decode_result($$item{value})});
+
 				if ( ($count % 2) == 1)
 				{
-					# This line uses $$item{value}, not $$item{type}!
-
-					$type  = join('', @{$self -> decode_result($$item{value})});
+					$type = $value;
 				}
 				else
 				{
-					$value = join('', @{$self -> decode_result($$item{value})});
-
 					$self -> stack -> push({type => $type, value => $value});
 				}
 			}
@@ -475,84 +482,131 @@ C<Text::Balanced::Marpa> - Extract delimited text sequences from strings
 	use strict;
 	use warnings;
 
-	use Text::Balanced::Marpa ':constants';
+	use X500::DN::Marpa ':constants';
 
 	# -----------
 
-	my($count)  = 0;
-	my($parser) = Text::Balanced::Marpa -> new
+	my(%count)  = (fail => 0, success => 0, total => 0);
+	my($parser) = X500::DN::Marpa -> new
 	(
-		open    => ['<:' ,'[%'],
-		close   => [':>', '%]'],
-		options => nesting_is_fatal | print_warnings,
+		options => debug,
 	);
 	my(@text) =
 	(
-		q|<: a :>|,
-		q|a [% b <: c :> d %] e|,
-		q|a <: b <: c :> d :> e|, # nesting_is_fatal triggers an error here.
+		q||,
+		q|1.4.9=2001|,
+		q|cn=Nemo,c=US|,
+		q|cn=Nemo, c=US|,
+		q|cn = Nemo, c = US|,
+		q|cn=John Doe, o=Acme, c=US|,
+		q|cn=John Doe, o=Acme\\, Inc., c=US|,
+		q|x= |,
+		q|x=\\ |,
+		q|x = \\ |,
+		q|x=\\ \\ |,
+		q|x=\\#\"\\41|,
+		q|x=#616263|,
+		q|SN=Lu\C4\8Di\C4\87|,		# 'Lui'.
 	);
 
 	my($result);
 
 	for my $text (@text)
 	{
-		$count++;
+		$count{total}++;
 
-		print "Parsing |$text|\n";
+		print "Parsing |$text|. \n";
 
-		$result = $parser -> parse(\$text);
+		$result = $parser -> parse($text);
 
-		print join("\n", @{$parser -> tree -> tree2string}), "\n";
 		print "Parse result: $result (0 is success)\n";
 
-		if ($count == 3)
+		if ($result == 0)
 		{
-			print "Deliberate error: Failed to parse |$text|\n";
-			print 'Error number: ', $parser -> error_number, '. Error message: ',
-					$parser -> error_message, "\n";
+			$count{success}++;
+
+			for my $item ($parser -> stack -> print)
+			{
+				print "$$item{type} = $$item{value}. \n";
+			}
 		}
 
 		print '-' x 50, "\n";
 	}
 
+	$count{fail} = $count{total} - $count{success};
+
+	print "\n";
+	print 'Statistics: ', join(', ', map{"$_ => $count{$_}"} sort keys %count), ". \n";
+
 See scripts/synopsis.pl.
 
 This is the printout of synopsis.pl:
 
-	Parsing |<: a :>|
-	Parsed text:
-	root. Attributes: {}
-	   |--- open. Attributes: {text => "<:"}
-	   |   |--- string. Attributes: {text => " a "}
-	   |--- close. Attributes: {text => ":>"}
+	Parsing ||.
 	Parse result: 0 (0 is success)
 	--------------------------------------------------
-	Parsing |a [% b <: c :> d %] e|
-	Parsed text:
-	root. Attributes: {}
-	   |--- string. Attributes: {text => "a "}
-	   |--- open. Attributes: {text => "[%"}
-	   |   |--- string. Attributes: {text => " b "}
-	   |   |--- open. Attributes: {text => "<:"}
-	   |   |   |--- string. Attributes: {text => " c "}
-	   |   |--- close. Attributes: {text => ":>"}
-	   |   |--- string. Attributes: {text => " d "}
-	   |--- close. Attributes: {text => "%]"}
-	   |--- string. Attributes: {text => " e"}
+	Parsing |1.4.9=2001|.
 	Parse result: 0 (0 is success)
+	1.4.9 = 2001.
 	--------------------------------------------------
-	Parsing |a <: b <: c :> d :> e|
-	Error: Parse failed. Opened delimiter <: again before closing previous one
-	Text parsed so far:
-	root. Attributes: {}
-	   |--- string. Attributes: {text => "a "}
-	   |--- open. Attributes: {text => "<:"}
-	       |--- string. Attributes: {text => " b "}
-	Parse result: 1 (0 is success)
-	Deliberate error: Failed to parse |a <: b <: c :> d :> e|
-	Error number: 2. Error message: Opened delimiter <: again before closing previous one
+	Parsing |cn=Nemo,c=US|.
+	Parse result: 0 (0 is success)
+	cn = Nemo.
+	c = US.
 	--------------------------------------------------
+	Parsing |cn=Nemo, c=US|.
+	Parse result: 0 (0 is success)
+	cn = Nemo.
+	c = US.
+	--------------------------------------------------
+	Parsing |cn = Nemo, c = US|.
+	Parse result: 0 (0 is success)
+	cn = Nemo.
+	c = US.
+	--------------------------------------------------
+	Parsing |cn=John Doe, o=Acme, c=US|.
+	Parse result: 0 (0 is success)
+	cn = John Doe.
+	o = Acme.
+	c = US.
+	--------------------------------------------------
+	Parsing |cn=John Doe, o=Acme\, Inc., c=US|.
+	Parse result: 0 (0 is success)
+	cn = John Doe.
+	o = Acme\, Inc..
+	c = US.
+	--------------------------------------------------
+	Parsing |x= |.
+	Parse result: 0 (0 is success)
+	x = .
+	--------------------------------------------------
+	Parsing |x=\ |.
+	Parse result: 0 (0 is success)
+	x = \ .
+	--------------------------------------------------
+	Parsing |x = \ |.
+	Parse result: 0 (0 is success)
+	x = \ .
+	--------------------------------------------------
+	Parsing |x=\ \ |.
+	Parse result: 0 (0 is success)
+	x = \ \ .
+	--------------------------------------------------
+	Parsing |x=\#\"\41|.
+	Parse result: 0 (0 is success)
+	x = \#\"\41.
+	--------------------------------------------------
+	Parsing |x=#616263|.
+	Parse result: 0 (0 is success)
+	x = #616263.
+	--------------------------------------------------
+	Parsing |SN=Lu\C4\8Di\C4\87|.
+	Parse result: 0 (0 is success)
+	SN = Lu\C4\8Di\C4\87.
+	--------------------------------------------------
+
+	Statistics: fail => 0, success => 14, total => 14.
 
 =head1 Description
 
