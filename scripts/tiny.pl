@@ -18,6 +18,7 @@ my(@text) =
 	q|1.4.9=2001|,
 	q|cn=Nemo,c=US|,
 	q|cn=Nemo, c=US|,
+	q|commonName=Nemo, countryName=US|,
 	q|cn = Nemo, c = US|,
 	q|cn=John Doe, o=Acme, c=US|,
 	q|cn=John Doe, o=Acme\\, Inc., c=US|,
@@ -37,7 +38,7 @@ for my $text (@text)
 {
 	$count{total}++;
 
-	print '        | ';
+	print sprintf('(# %4d)| ', $count{total});
 	printf '%10d', $_ for (1 .. 9);
 	print "\n";
 	print '        |';
@@ -55,7 +56,7 @@ for my $text (@text)
 
 		for my $item ($parser -> stack -> print)
 		{
-			print "$$item{type} = $$item{value}. \n";
+			print "|$$item{type}| = |$$item{value}|. \n";
 		}
 	}
 }

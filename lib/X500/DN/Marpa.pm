@@ -127,12 +127,19 @@ lexeme default		= latm => 1
 
 dn					::=
 dn					::= rdn
-						| rdn comma dn
+						| rdn separators dn
 
-rdn					::= attribute_pair				# rank => 1
-						| attribute_pair plus rdn	# rank => 2
+separators			::= separator+
 
-attribute_pair		::= attribute_type equals attribute_value
+separator			::= comma
+						| space
+
+rdn					::= attribute_pair								rank => 1
+						| attribute_pair spacer plus spacer rdn		rank => 2
+
+attribute_pair		::= attribute_type spacer equals spacer attribute_value
+
+spacer				::= space*
 
 # attribute_type.
 
@@ -248,6 +255,8 @@ plus				~ '+'			# [\x2b].
 
 sharp				~ '#'			# [\x23].
 
+space				~ ' '			# [\x20].
+
 special_char		~ ["+,;<> #=]	# Use " in comment for UltraEdit syntax hiliter.
 
 sutf1				~ [\x01-\x21\x23-\x2a\x2d-\x3a\x3d\x3f-\x5b\x5d-\x7f]
@@ -287,9 +296,6 @@ utf4_suffix_2		~ utf0 utf0 utf0
 utf4_prefix_3		~ [\xf4\x80-\x8f]
 
 utf4_suffix_3		~ utf0 utf0
-
-:discard			~ whitespace
-whitespace			~ [\s]+
 
 END_OF_GRAMMAR
 
@@ -356,7 +362,7 @@ sub parse
 		({
 			exhaustion        => 'event',
 			grammar           => $self -> grammar,
-			#ranking_method    => 'high_rule_only',
+			ranking_method    => 'high_rule_only',
 			semantics_package => 'X500::DN::Marpa::Actions',
 		})
 	);
@@ -418,7 +424,7 @@ sub parse
 
 			for my $item (@{$self -> decode_result($$value_ref)})
 			{
-				next if (! defined($item) || ($item =~ /^[=,;+]$/) );
+				next if (! defined($item) || ($item =~ /^[=,;+ ]$/) );
 
 				$count++;
 
@@ -431,7 +437,7 @@ sub parse
 				#     4  value
 				#   ...
 
-				$value = join('', @{$self -> decode_result($$item{value})});
+				$value = $$item{value};
 
 				if ( ($count % 2) == 1)
 				{
