@@ -10,26 +10,12 @@ use X500::DN::Marpa ':constants';
 my(%count)  = (fail => 0, success => 0, total => 0);
 my($parser) = X500::DN::Marpa -> new
 (
-	options => debug,
+	options => long_descriptors,
 );
 my(@text) =
 (
-	q||,
-	q|1.4.9=2001|,
-	q|cn=Nemo,c=US|,
 	q|cn=Nemo, c=US|,
 	q|commonName=Nemo, countryName=US|,
-	q|cn = Nemo, c = US|,
-	q|cn=John Doe, o=Acme, c=US|,
-	q|cn=John Doe, o=Acme\\, Inc., c=US|,
-	q|x= |,
-	q|x=\\ |,
-	q|x = \\ |,
-	q|x=\\ \\ |,
-	q|x=\\#\"\\41|,
-	q|x=#616263|,
-	q|SN=Lu\C4\8Di\C4\87|,		# 'Lučić'.
-	q|foo=1 + bar=2, baz=3|,
 );
 
 my($result);
@@ -38,7 +24,7 @@ for my $text (@text)
 {
 	$count{total}++;
 
-	print sprintf('(# %4d)| ', $count{total});
+	print sprintf('(# %3d) | ', $count{total});
 	printf '%10d', $_ for (1 .. 9);
 	print "\n";
 	print '        |';
@@ -56,7 +42,7 @@ for my $text (@text)
 
 		for my $item ($parser -> stack -> print)
 		{
-			print "|$$item{type}| = |$$item{value}|. \n";
+			print "$$item{type} = $$item{value}. \n";
 		}
 	}
 }

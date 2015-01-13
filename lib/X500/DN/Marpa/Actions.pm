@@ -9,9 +9,9 @@ use warnings qw(FATAL utf8); # Fatalize encoding glitches.
 
 sub attribute_type
 {
-	my($self, $t) = @_;
-	$t        = lc decode_result($t || '');
-	my(%name) =
+	my($self, $t)    = @_;
+	$t               = lc decode_result($t || '');
+	my(%descriptors) =
 	(
 		commonname             => 'cn',
 		countryname            => 'c',
@@ -23,7 +23,7 @@ sub attribute_type
 		streetaddress          => 'street',
 		userid                 => 'uid',
 	);
-	$t = $name{$t} ? $name{$t} : $t;
+	$t = $descriptors{$t} ? $descriptors{$t} : $t;
 
 	return
 	{

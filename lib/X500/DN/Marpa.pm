@@ -13,6 +13,7 @@ use Const::Exporter constants =>
 	print_warnings      =>  2,
 	ambiguity_is_fatal  =>  4,
 	exhaustion_is_fatal =>  8,
+	long_descriptors    => 16,
 ];
 
 use Marpa::R2;
@@ -77,9 +78,13 @@ has recce =>
 	required => 0,
 );
 
+# The default value of $self -> stack is set to Set::Array -> new, so that if anyone
+# accesses $self -> stack before calling $self -> parse, gets a meaningful result.
+# This is despite the fact the parser() resets the stack at the start of each call.
+
 has stack =>
 (
-	default  => sub{return ''},
+	default  => sub{return Set::Array -> new},
 	is       => 'rw',
 	isa      => Any,
 	required => 0,
@@ -91,6 +96,19 @@ has text =>
 	is       => 'rw',
 	isa      => Str,
 	required => 0,
+);
+
+my(%descriptors) =
+(
+	cn     => 'commonName',
+	c      => 'countryName',
+	dc     => 'domainComponent',
+	l      => 'localityName',
+	ou     => 'organizationalUnitName',
+	o      => 'organizationName',
+	st     => 'stateOrProvinceName',
+	street => 'streetAddress',
+	uid    => 'userId',
 );
 
 our $VERSION = '1.00';
@@ -389,7 +407,7 @@ sub parse
 			$message = 'Parse exhausted';
 
 			$self -> error_message($message);
-			$self -> error_number(6);
+			$self -> error_number(1);
 
 			if ($self -> options & exhaustion_is_fatal)
 			{
@@ -399,18 +417,35 @@ sub parse
 			}
 			else
 			{
-				$self -> error_number(-6);
+				$self -> error_number(-1);
 
 				print "Warning: $message\n" if ($self -> options & print_warnings);
 			}
 		}
-		elsif (my $ambiguous_status = $self -> recce -> ambiguous)
+		elsif (my $status = $self -> recce -> ambiguous)
 		{
-			chomp $ambiguous_status;
+			my($terminals) = $self -> recce -> terminals_expected;
+			$terminals     = ['(None)'] if ($#$terminals < 0);
+			$message       = "Ambiguous parse. Status: $status. Terminals expected: " . join(', ', @$terminals);
 
-			die "Parse is ambiguous. Status: $ambiguous_status. \n";
+			$self -> error_message($message);
+			$self -> error_number(2);
+
+			if ($self -> options & ambiguity_is_fatal)
+			{
+				# This 'die' is inside try{}catch{}, which adds the prefix 'Error: '.
+
+				die "$message\n";
+			}
+			elsif ($self -> options & print_warnings)
+			{
+				$self -> error_number(-2);
+
+				print "Warning: $message\n";
+			}
 		}
 
+		my($long_form) = $self -> options & long_descriptors;
 		my($value_ref) = $self -> recce -> value;
 
 		if (defined $value_ref)
@@ -441,7 +476,7 @@ sub parse
 
 				if ( ($count % 2) == 1)
 				{
-					$type = $value;
+					$type = $long_form && $descriptors{$value} ? $descriptors{$value} : $value;
 				}
 				else
 				{
@@ -475,9 +510,11 @@ sub parse
 
 =pod
 
+=encoding utf8
+
 =head1 NAME
 
-C<X500-DN-Marpa> - Parse X.500 DNs
+C<X500::DN::Marpa> - Parse X.500 DNs
 
 =head1 Synopsis
 
@@ -493,7 +530,7 @@ C<X500-DN-Marpa> - Parse X.500 DNs
 	my(%count)  = (fail => 0, success => 0, total => 0);
 	my($parser) = X500::DN::Marpa -> new
 	(
-		options => debug,
+		options => long_descriptors,
 	);
 	my(@text) =
 	(
@@ -510,7 +547,15 @@ C<X500-DN-Marpa> - Parse X.500 DNs
 		q|x=\\ \\ |,
 		q|x=\\#\"\\41|,
 		q|x=#616263|,
-		q|SN=Lu\C4\8Di\C4\87|,		# 'Lui'.
+		q|SN=Lu\C4\8Di\C4\87|,  # 'Lučić'.
+		q|foo=1 + bar=2, baz=3|,
+		q|UID=jsmith,DC=example,DC=net|,
+		q|OU=Sales+CN=J.  Smith,DC=example,DC=net|,
+		q|CN=James \"Jim\" Smith\, III,DC=example,DC=net|,
+		q|CN=Before\0dAfter,DC=example,DC=net|,
+		q|1.3.6.1.4.1.1466.0=#04024869|,
+		q|UID=nobody@example.com,DC=example,DC=com|,
+		q|CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US|,
 	);
 
 	my($result);
@@ -556,30 +601,30 @@ This is the printout of synopsis.pl:
 	--------------------------------------------------
 	Parsing |cn=Nemo,c=US|.
 	Parse result: 0 (0 is success)
-	cn = Nemo.
-	c = US.
+	commonName = Nemo.
+	countryName = US.
 	--------------------------------------------------
 	Parsing |cn=Nemo, c=US|.
 	Parse result: 0 (0 is success)
-	cn = Nemo.
-	c = US.
+	commonName = Nemo.
+	countryName = US.
 	--------------------------------------------------
 	Parsing |cn = Nemo, c = US|.
 	Parse result: 0 (0 is success)
-	cn = Nemo.
-	c = US.
+	commonName = Nemo.
+	countryName = US.
 	--------------------------------------------------
 	Parsing |cn=John Doe, o=Acme, c=US|.
 	Parse result: 0 (0 is success)
-	cn = John Doe.
-	o = Acme.
-	c = US.
+	commonName = John Doe.
+	organizationName = Acme.
+	countryName = US.
 	--------------------------------------------------
 	Parsing |cn=John Doe, o=Acme\, Inc., c=US|.
 	Parse result: 0 (0 is success)
-	cn = John Doe.
-	o = Acme\, Inc..
-	c = US.
+	commonName = John Doe.
+	organizationName = Acme\, Inc..
+	countryName = US.
 	--------------------------------------------------
 	Parsing |x= |.
 	Parse result: 0 (0 is success)
@@ -607,63 +652,64 @@ This is the printout of synopsis.pl:
 	--------------------------------------------------
 	Parsing |SN=Lu\C4\8Di\C4\87|.
 	Parse result: 0 (0 is success)
-	SN = Lu\C4\8Di\C4\87.
+	sn = Lu\C4\8Di\C4\87.
+	--------------------------------------------------
+	Parsing |foo=1 + bar=2, baz=3|.
+	Parse result: 0 (0 is success)
+	foo = 1.
+	bar = 2.
+	baz = 3.
+	--------------------------------------------------
+	Parsing |UID=jsmith,DC=example,DC=net|.
+	Parse result: 0 (0 is success)
+	userId = jsmith.
+	domainComponent = example.
+	domainComponent = net.
+	--------------------------------------------------
+	Parsing |OU=Sales+CN=J.  Smith,DC=example,DC=net|.
+	Parse result: 0 (0 is success)
+	organizationalUnitName = Sales.
+	commonName = J.  Smith.
+	domainComponent = example.
+	domainComponent = net.
+	--------------------------------------------------
+	Parsing |CN=James \"Jim\" Smith\, III,DC=example,DC=net|.
+	Parse result: 0 (0 is success)
+	commonName = James \"Jim\" Smith\, III.
+	domainComponent = example.
+	domainComponent = net.
+	--------------------------------------------------
+	Parsing |CN=Before\0dAfter,DC=example,DC=net|.
+	Parse result: 0 (0 is success)
+	commonName = Before\0dAfter.
+	domainComponent = example.
+	domainComponent = net.
+	--------------------------------------------------
+	Parsing |1.3.6.1.4.1.1466.0=#04024869|.
+	Parse result: 0 (0 is success)
+	1.3.6.1.4.1.1466.0 = #04024869.
+	--------------------------------------------------
+	Parsing |UID=nobody@example.com,DC=example,DC=com|.
+	Parse result: 0 (0 is success)
+	userId = nobody@example.com.
+	domainComponent = example.
+	domainComponent = com.
+	--------------------------------------------------
+	Parsing |CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US|.
+	Parse result: 0 (0 is success)
+	commonName = John Smith.
+	organizationalUnitName = Sales.
+	organizationName = ACME Limited.
+	localityName = Moab.
+	stateOrProvinceName = Utah.
+	countryName = US.
 	--------------------------------------------------
 
-	Statistics: fail => 0, success => 14, total => 14.
+	Statistics: fail => 0, success => 22, total => 22.
 
 =head1 Description
 
-L<X500-DN-Marpa> provides a L<Marpa::R2>-based parser for extracting delimited text
-sequences from strings.
-
-See the L</FAQ> for various topics, including:
-
-=over 4
-
-=item o UFT8 handling
-
-See t/utf8.t.
-
-=item o Escaping delimiters within the text
-
-See t/escapes.t.
-
-=item o Options to make nested and/or overlapped delimiters fatal errors
-
-See t/colons.t.
-
-=item o Using delimiters which are part of another delimiter
-
-See t/escapes.t and t/perl.delimiters.
-
-=item o Processing the tree-structured output
-
-See scripts/traverse.pl.
-
-=item o Emulating L<Text::Xslate>'s use of '<:' and ':>
-
-See t/colons.t and t/percents.t.
-
-=item o Implementing a really trivial HTML parser
-
-See scripts/traverse.pl and t/html.t.
-
-In the same vein, see t/angle.brackets.t, for code where the delimiters are just '<' and '>'.
-
-=item o Handling multiple sets of delimiters
-
-See t/multiple.delimiters.t.
-
-=item o Skipping (leading) characters in the input string
-
-See t/skip.prefix.t.
-
-=item o Implementing hard-to-read text strings as delimiters
-
-See t/silly.delimiters.
-
-=back
+C<X500::DN::Marpa> provides a L<Marpa::R2>-based parser for parsing X.500 Distinguished Names.
 
 =head1 Distributions
 
@@ -674,15 +720,15 @@ for help on unpacking and installing distros.
 
 =head1 Installation
 
-Install L<X500-DN-Marpa> as you would any C<Perl> module:
+Install C<X500::DN::Marpa> as you would any C<Perl> module:
 
 Run:
 
-	cpanm X500-DN-Marpa
+	cpanm X500::DN::Marpa
 
 or run:
 
-	sudo cpan X500-DN-Marpa
+	sudo cpan X500::DN::Marpa
 
 or unpack the distro, and then either:
 
@@ -700,12 +746,12 @@ or:
 
 =head1 Constructor and Initialization
 
-C<new()> is called as C<< my($parser) = X500-DN-Marpa -> new(k1 => v1, k2 => v2, ...) >>.
+C<new()> is called as C<< my($parser) = X500::DN::Marpa -> new(k1 => v1, k2 => v2, ...) >>.
 
-It returns a new object of type C<X500-DN-Marpa>.
+It returns a new object of type C<X500::DN::Marpa>.
 
 Key-value pairs accepted in the parameter list (see corresponding methods for details
-[e.g. L</text([$string])>]):
+[e.g. L</options([$bit_string])>]):
 
 =over 4
 
@@ -727,7 +773,7 @@ Default: ''.
 
 =head2 bnf()
 
-Returns a string containing the grammar constructed based on user input.
+Returns a string containing the grammar used by this module.
 
 =head2 error_message()
 
@@ -756,113 +802,27 @@ Possible values for error_number() and error_message():
 
 This is the default value.
 
-=item o 1/-1 => "Last open delimiter: $lexeme_1. Unexpected closing delimiter: $lexeme_2"
+=item o 1/-1 => "Parse exhausted"
 
 If L</error_number()> returns 1, it's an error, and if it returns -1 it's a warning.
 
-You can set the option C<overlap_is_fatal> to make it fatal.
+You can set the option C<exhaustion_is_fatal> to make it fatal.
 
-=item o 2/-2 => "Opened delimiter $lexeme again before closing previous one"
-
-If L</error_number()> returns 2, it's an error, and if it returns -2 it's a warning.
-
-You can set the option C<nesting_is_fatal> to make it fatal.
-
-=item o 3/-3 => "Ambiguous parse. Status: $status. Terminals expected: a, b, ..."
+=item o 2/-2 => "Ambiguous parse. Status: $status. Terminals expected: a, b, ..."
 
 This message is only produced when the parse is ambiguous.
 
-If L</error_number()> returns 3, it's an error, and if it returns -3 it's a warning.
+If L</error_number()> returns 2, it's an error, and if it returns -2 it's a warning.
 
 You can set the option C<ambiguity_is_fatal> to make it fatal.
-
-=item o 4 => "Backslash is forbidden as a delimiter character"
-
-This preempts some types of sabotage.
-
-This message can never be just a warning message.
-
-=item o 5 => "Single-quotes are forbidden in multi-character delimiters"
-
-This limitation is due to the syntax of
-L<Marpa's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>.
-
-This message can never be just a warning message.
-
-=item o 6/-6 => "Parse exhausted"
-
-If L</error_number()> returns 6, it's an error, and if it returns -6 it's a warning.
-
-You can set the option C<exhaustion_is_fatal> to make it fatal.
-
-=item o 7 => 'Single-quote is forbidden as an escape character'
-
-This limitation is due to the syntax of
-L<Marpa's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>.
-
-This message can never be just a warning message.
-
-=item o 8 => "There must be at least 1 pair of open/close delimiters"
-
-This message can never be just a warning message.
-
-=item o 9 => "The # of open delimiters must match the # of close delimiters"
-
-This message can never be just a warning message.
-
-=item o 10 => "Unexpected event name 'xyz'"
-
-Marpa has trigged an event and it's name is not in the hash of event names derived from the BNF.
-
-This message can never be just a warning message.
-
-=item o 11 => "The code does not handle these events simultaneously: a, b, ..."
-
-The code is written to handle single events at a time, or in rare cases, 2 events at the same time.
-But here, multiple events have been triggered and the code cannot handle the given combination.
-
-This message can never be just a warning message.
 
 =back
 
 See L</error_message()>.
 
-=head2 escape_char()
-
-Get the escape char.
-
-=head2 known_events()
-
-Returns a hashref where the keys are event names and the values are 1.
-
-=head2 length([$integer])
-
-Here, the [] indicate an optional parameter.
-
-Get or set the length of the input string to process.
-
-See also the L</FAQ> and L</pos([$integer])>.
-
-'length' is a parameter to L</new()>. See L</Constructor and Initialization> for details.
-
-=head2 matching_delimiter()
-
-Returns a hashref where the keys are opening delimiters and the values are the corresponding closing
-delimiters.
-
 =head2 new()
 
 See L</Constructor and Initialization> for details on the parameters accepted by L</new()>.
-
-=head2 open()
-
-Get the arrayref of opening delimiters.
-
-See also L</close()>.
-
-See the L</FAQ> for details and warnings.
-
-'open' is a parameter to L</new()>. See L</Constructor and Initialization> for details.
 
 =head2 options([$bit_string])
 
@@ -890,21 +850,21 @@ C<< new(text => $string) >>, and over any string passed to L</text([$string])>. 
 the string passed to C<parse()> is passed to L</text([$string)>, meaning any subsequent
 call to C<text()> returns the string passed to C<parse()>.
 
-See scripts/samples.pl.
+See scripts/synopsis.pl.
 
 Returns 0 for success and 1 for failure.
 
 If the value is 1, you should call L</error_number()> to find out what happened.
 
-=head2 pos([$integer])
+=head2 stack()
 
-Here, the [] indicate an optional parameter.
+Returns an object of type L<Set::Array>, which holds the parsed data.
 
-Get or set the offset within the input string at which to start processing.
+Obviously, it only makes sense to call C<stack()> after calling L</parse([$string])>.
 
-See also the L</FAQ> and L</length([$integer])>.
+The structure of elements in this stack is documented in the L</FAQ>.
 
-'pos' is a parameter to L</new()>. See L</Constructor and Initialization> for details.
+See scripts/tiny.pl for sample code.
 
 =head2 text([$string])
 
@@ -914,53 +874,70 @@ Get or set a string to be parsed.
 
 'text' is a parameter to L</new()>. See L</Constructor and Initialization> for details.
 
-=head2 tree()
-
-Returns an object of type L<Tree>, which holds the parsed data.
-
-Obviously, it only makes sense to call C<tree()> after calling C<parse()>.
-
-See scripts/traverse.pl for sample code which processes this tree's nodes.
-
 =head1 FAQ
 
 =head2 Where are the error messages and numbers described?
 
 See L</error_message()> and L</error_number()>.
 
-=head2 How do I escape delimiters?
-
-By backslash-escaping the first character of all open and close delimiters which appear in the
-text.
-
-As an example, if the delimiters are '<:' and ':>', this means you have to escape I<all> the '<'
-chars and I<all> the colons in the text.
-
-The backslash is preserved in the output.
-
-If you don't want to use backslash for escaping, or can't, you can pass a different escape character
-to L</new()>.
-
-See t/escapes.t.
+See also L</What are the possible values for the 'options' parameter to new()?> below.
 
 =head2 Does this package support Unicode/UTF8?
 
-Yes. See t/escapes.t, t/multiple.quotes.t and t/utf8.t.
+Handling of UTF8 is discussed in one of the RFCs listed in L</References>, below.
 
-=head2 Does this package handler Perl delimiters (e.g. q|..|, qq|..|, qr/../, qw/../)?
+=head2 What does this package output?
 
-See t/perl.delimiters.t.
+It outputs a stack, which is an object of type L<Set::Array>. See L</stack()>.
+
+Each elements of this stack is a hashref, with these (key => value) pairs:
+
+=over 4
+
+=item o type => $type
+
+=item o value => $value
+
+=back
+
+A typical script uses code like this (copied from scripts/tiny.pl):
+
+	$result = $parser -> parse($text);
+
+	print "Parse result: $result (0 is success)\n";
+
+	if ($result == 0)
+	{
+		for my $item ($parser -> stack -> print)
+		{
+			print "$$item{type} = $$item{value}. \n";
+		}
+	}
+
+If the option C<long_descriptors> is I<not> used in the call to L</new()>, then $$item{type}
+defaults to lower-case. L<RFC4512|https://www.ietf.org/rfc/rfc4512.txt> says 'Short names are case
+insensitive....'. I've chosen to use lower-case as the canonical form output by my code.
+
+If that option I<is> used, then some types are output in mixed case. The list of such types is given
+in section 3 (at the top of page 6) in L<RFC4514|https://www.ietf.org/rfc/rfc4514.txt>. This
+document is one of those listed in L</References>, below.
+
+For a discussion of the mixed-case descriptors, see
+L</What are the possible values for the 'options' parameter to new()?> below.
+
+An extended list of such long descriptors is given in section 4 (page 25) in
+L<RFC4519|https://www.ietf.org/rfc/rfc4519.txt>. Note that 'streetAddress' is missing from this
+list.
 
 =head2 What are the possible values for the 'options' parameter to new()?
 
 Firstly, to make these constants available, you must say:
 
-	use X500-DN-Marpa ':constants';
+	use X500::DN::Marpa ':constants';
 
 Secondly, more detail on errors and warnings can be found at L</error_number()>.
 
-Thirdly, for usage of these option flags, see t/angle.brackets.t, t/colons.t, t/escapes.t,
-t/multiple.quotes.t, t/percents.t and scripts/samples.pl.
+Thirdly, for usage of these option flags, see scripts/synopsis.pl and scripts/tiny.pl.
 
 Now the flags themselves:
 
@@ -996,101 +973,47 @@ It's tempting to call this option C<warnings>, but Perl already has C<use warnin
 
 It's value is 2.
 
-=item o overlap_is_fatal
+=item o ambiguity_is_fatal
 
-This means overlapping delimiters cause a fatal error.
-
-So, setting C<overlap_is_fatal> means '{Bold [Italic}]' would be a fatal error.
-
-I use this example since it gives me the opportunity to warn you, this will I<not> do what you want
-if you try to use the delimiters of '<' and '>' for HTML. That is, '<i><b>Bold Italic</i></b>' is
-not an error because what overlap are '<b>' and '</i>' BUT THEY ARE NOT TAGS. The tags are '<' and
-'>', ok? See also t/html.t.
+This makes L</error_number()> return 2 rather than -2.
 
 It's value is 4.
 
-=item o nesting_is_fatal
+=item o exhaustion_is_fatal
 
-This means nesting of identical opening delimiters is fatal.
-
-So, using C<nesting_is_fatal> means 'a <: b <: c :> d :> e' would be a fatal error.
+This makes L</error_number()> return 1 rather than -1.
 
 It's value is 8.
 
-=item o ambiguity_is_fatal
+=item o long_descriptors
 
-This makes L</error_number()> return 3 rather than -3.
+This makes the C<type> key in the output stack's elements contain long descriptor names rather than
+abbreviations.
+
+For example, if the input was 'cn=Nemo,c=US', the output stack would contain, I<by default>, i.e.
+without setting this option:
+
+=over 4
+
+=item o [0]: {type => 'cn', value => 'Nemo'}
+
+=item o [1]: {type => 'c', value => 'US'}
+
+=back
+
+However, if this option is set, the output will contain:
+
+=over 4
+
+=item o [0]: {type => 'commonName', value => 'Nemo'}
+
+=item o [1]: {type => 'countryName', value => 'US'}
+
+=back
 
 It's value is 16.
 
-=item o exhaustion_is_fatal
-
-This makes L</error_number()> return 6 rather than -6.
-
-It's value is 32.
-
 =back
-
-=head2 How do I print the tree built by the parser?
-
-See L</Synopsis>.
-
-=head2 How do I make use of the tree built by the parser?
-
-See scripts/traverse.pl. It is a copy of t/html.t with tree-walking code instead of test code.
-
-=head2 How is the parsed data held in RAM?
-
-The parsed output is held in a tree managed by L<Tree>.
-
-The tree always has a root node, which has nothing to do with the input data. So, even an empty
-imput string will produce a tree with 1 node. This root has an empty hashref associated with it.
-
-Nodes have a name and a hashref of attributes.
-
-The name indicates the type of node. Names are one of these literals:
-
-=over 4
-
-=item o close
-
-=item o open
-
-=item o root
-
-=item o text
-
-=back
-
-For 'open' and 'close', the delimiter is given by the value of the 'text' key in the hashref.
-
-The (key => value) pairs in the hashref are:
-
-=over 4
-
-=item o text => $string
-
-If the node name is 'open' or 'close', $string is the delimiter.
-
-If the node name is 'text', $string is the verbatim text from the document.
-
-Verbatim means, for example, that backslashes in the input are preserved.
-
-=back
-
-Try:
-
-	perl -Ilib scripts/samples.pl info
-
-=head2 How is HTML/XML handled?
-
-The tree does not preserve the nested nature of HTML/XML.
-
-Post-processing (valid) HTML could easily generate another view of the data.
-
-But anyway, to get perfect HTML you'd be grabbing the output of L<Marpa::R2::HTML>, right?
-
-See scripts/traverse.pl and t/html.t for a trivial HTML parser.
 
 =head2 What is the homepage of Marpa?
 
@@ -1104,29 +1027,29 @@ This runs both standard and author tests:
 
 	shell> perl Build.PL; ./Build; ./Build authortest
 
-=head1 TODO
+=head1 References
 
-=over 4
+I found RFCs 4514 and 4512 to be the most directly relevant ones.
 
-=item o Advanced error reporting
+L<RFC Index|https://www.ietf.org/rfc/rfc-index.txt>: The Index. Just search for 'LDAP'.
 
-See L<https://jeffreykegler.github.io/Ocean-of-Awareness-blog/individual/2014/11/delimiter.html>.
+L<RFC4514|https://www.ietf.org/rfc/rfc4514.txt>:
+Lightweight Directory Access Protocol (LDAP): String Representation of Distinguished Names.
 
-Perhaps this could be a sub-class?
+L<RFC4512|https://www.ietf.org/rfc/rfc4512.txt>:
+Lightweight Directory Access Protocol (LDAP): Directory Information Models.
 
-=item o I8N support for error messages
+L<RFC4517|https://www.ietf.org/rfc/rfc4517.txt>:
+Lightweight Directory Access Protocol (LDAP): Syntaxes and Matching Rules.
 
-=item o An explicit test program for parse exhaustion
+L<RFC4234|https://www.ietf.org/rfc/rfc4234.txt>:
+Augmented BNF for Syntax Specifications: ABNF.
 
-=back
+L<RFC3629|https://www.ietf.org/rfc/rfc3629.txt>: UTF-8, a transformation format of ISO 10646.
 
 =head1 See Also
 
-L<Text::Balanced>.
-
-L<Tree> and L<Tree::Persist>.
-
-L<MarpaX::Demo::SampleScripts> - for various usages of L<Marpa::R2>, but not of this module.
+L<X500::DN>.
 
 =head1 Machine-Readable Change Log
 
@@ -1136,18 +1059,6 @@ The file Changes was converted into Changelog.ini by L<Module::Metadata::Changes
 
 Version numbers < 1.00 represent development versions. From 1.00 up, they are production versions.
 
-=head1 Thanks
-
-Thanks to Jeffrey Kegler, who wrote Marpa and L<Marpa::R2>.
-
-And thanks to rns (Ruslan Shvedov) for writing the grammar for double-quoted strings used in
-L<MarpaX::Demo::SampleScripts>'s scripts/quoted.strings.02.pl. I adapted it to HTML (see
-scripts/quoted.strings.05.pl in that module), and then incorporated the grammar into
-L<GraphViz2::Marpa>, and - after more extensions - into this module.
-
-Lastly, thanks to Robert Rothenberg for L<Const::Exporter>, a module which works the same way
-Perl does.
-
 =head1 Repository
 
 L<https://github.com/ronsavage/X500-DN-Marpa>
@@ -1156,11 +1067,11 @@ L<https://github.com/ronsavage/X500-DN-Marpa>
 
 Email the author, or log a bug on RT:
 
-L<https://rt.cpan.org/Public/Dist/Display.html?Name=X500-DN-Marpa>.
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=X500::DN::Marpa>.
 
 =head1 Author
 
-L<X500-DN-Marpa> was written by Ron Savage I<E<lt>ron@savage.net.auE<gt>> in 2014.
+L<X500::DN::Marpa> was written by Ron Savage I<E<lt>ron@savage.net.auE<gt>> in 2015.
 
 Marpa's homepage: L<http://savage.net.au/Marpa.html>.
 
@@ -1168,7 +1079,7 @@ My homepage: L<http://savage.net.au/>.
 
 =head1 Copyright
 
-Australian copyright (c) 2014, Ron Savage.
+Australian copyright (c) 2015, Ron Savage.
 
 	All Programs of mine are 'OSI Certified Open Source Software';
 	you can redistribute them and/or modify them under the terms of
