@@ -58,6 +58,8 @@ for my $text (@text)
 		{
 			print "$$item{type} = $$item{value}. \n";
 		}
+
+		print 'DN: ', $parser -> dn, ". \n";
 	}
 
 	print '-' x 50, "\n";

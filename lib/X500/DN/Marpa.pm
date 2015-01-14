@@ -369,6 +369,23 @@ sub decode_result
 
 # ------------------------------------------------
 
+sub dn
+{
+	my($self) = @_;
+
+	my(@dn);
+
+	for my $item ($self -> stack -> print)
+	{
+		push @dn, "$$item{type}=$$item{value}";
+	}
+
+	return join(',', reverse @dn);
+
+} # End of dn.
+
+# ------------------------------------------------
+
 sub parse
 {
 	my($self, $string) = @_;
@@ -775,6 +792,14 @@ Default: ''.
 
 Returns a string containing the grammar used by this module.
 
+=head2 dn()
+
+Returns the RDNs, separated by commas, as a single string in the reverse order compared with the
+order of the RNDs in the input text.
+
+Hence 'cn=Nemo, c=US' is returned as 'countryName=US,commonName=Nemo' (when the
+C<long_descriptors> option is used), and as 'c=US,cn=Nemo' by default.
+
 =head2 error_message()
 
 Returns the last error or warning message set.
@@ -889,6 +914,10 @@ Handling of UTF8 is discussed in one of the RFCs listed in L</References>, below
 =head2 What does this package output?
 
 It outputs a stack, which is an object of type L<Set::Array>. See L</stack()>.
+
+Elements in this stack are in the same order as the RDNs are in the input string.
+
+The L</dn()> method returns the RDNs, separated by commas, as a single string in the reverse order.
 
 Each elements of this stack is a hashref, with these (key => value) pairs:
 
@@ -1047,9 +1076,12 @@ Augmented BNF for Syntax Specifications: ABNF.
 
 L<RFC3629|https://www.ietf.org/rfc/rfc3629.txt>: UTF-8, a transformation format of ISO 10646.
 
+RFC4514 also discusses UTF8. Search it using the string 'UTF-8'.
+
 =head1 See Also
 
-L<X500::DN>.
+L<X500::DN>. Note: This module is based on the obsolete
+L<RFC2253|https://www.ietf.org/rfc/rfc2253.txt>.
 
 =head1 Machine-Readable Change Log
 
