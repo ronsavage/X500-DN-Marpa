@@ -371,6 +371,61 @@ sub decode_result
 
 # ------------------------------------------------
 
+sub _combine
+{
+	my($self) = @_;
+
+	my(@temp);
+
+	for my $item ($self -> stack -> print)
+	{
+		if ($$item{multi})
+		{
+			push @temp, 'multi';
+		}
+		else
+		{
+			push @temp, defined($$item{value}) ? "$$item{type}=$$item{value}" : "$$item{type}=";
+		}
+	}
+
+	my(@dn);
+	my($multi);
+
+	for (my $i = 0; $i <= $#temp; $i++)
+	{
+		if ($temp[$i] eq 'multi')
+		{
+			$multi = 'yes';
+		}
+		elsif ($multi)
+		{
+			$multi = undef;
+
+			$dn[$#dn] .= " + $temp[$i]";
+		}
+		else
+		{
+			push @dn, $temp[$i];
+		}
+	}
+
+	return [@dn];
+
+} # End of _combine.
+
+# ------------------------------------------------
+
+sub dn
+{
+	my($self) = @_;
+
+	return join(',', reverse @{$self -> stack});
+
+} # End of dn.
+
+# ------------------------------------------------
+
 sub get_rdn
 {
 	my($self, $n) = @_;
@@ -444,35 +499,11 @@ sub get_rdn_value
 
 # ------------------------------------------------
 
-sub dn
-{
-	my($self) = @_;
-
-	my(@dn);
-
-	for my $item ($self -> stack -> print)
-	{
-		push @dn, "$$item{type}=$$item{value}";
-	}
-
-	return join(',', reverse @dn);
-
-} # End of dn.
-
-# ------------------------------------------------
-
 sub openssl_dn
 {
 	my($self) = @_;
 
-	my(@dn);
-
-	for my $item ($self -> stack -> print)
-	{
-		push @dn, "$$item{type}=$$item{value}";
-	}
-
-	return join('+', @dn);
+	return join('+', @{$self -> stack});
 
 } # End of openssl_dn.
 
@@ -571,7 +602,15 @@ sub parse
 
 			for my $item (@{$self -> decode_result($$value_ref)})
 			{
-				next if (! defined($item) || ($item =~ /^[=,;+ ]$/) );
+				next if (! defined($item) );
+				next if ($item =~ /^[=,; ]$/);
+
+				if ($item eq '+')
+				{
+					$self -> stack -> push({multi => 'yes'});
+
+					next;
+				}
 
 				$count++;
 
@@ -608,6 +647,8 @@ sub parse
 					$self -> stack -> push({type => $type, value => $value});
 				}
 			}
+
+			$self -> stack(Set::Array -> new(@{$self -> _combine}) );
 		}
 		else
 		{

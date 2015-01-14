@@ -28,9 +28,9 @@ my(@text)   =
 	[1, q|x=\#\"\41|, q|x=\\#\"\\41|],
 	[1, q|x=abc|, q|x=#616263|],
 	[1, q|sn=Lu\C4\8Di\C4\87|, q|SN=Lu\C4\8Di\C4\87|],			# 'Lučić'.
-	[3, q|foo=1|, q|foo=1 + bar=2, baz=3|],
+	[2, q|foo=1|, q|foo=1 + bar=2, baz=3|],
 	[3, q|uid=jsmith|, q|UID=jsmith,DC=example,DC=net|],
-	[4, q|ou=Sales|, q|OU=Sales+CN=J.  Smith,DC=example,DC=net|],
+	[3, q|ou=Sales|, q|OU=Sales+CN=J. Smith,DC=example,DC=net|],
 	[3, q|cn=James \"Jim\" Smith\, III|, q|CN=James \"Jim\" Smith\, III,DC=example,DC=net|],
 	[3, q|cn=Before\0dAfter|, q|CN=Before\0dAfter,DC=example,DC=net|],
 	[3, q|uid=nobody@example.com|, q|UID=nobody@example.com,DC=example,DC=com|],
@@ -84,8 +84,8 @@ for my $item (@text)
 	}
 }
 
-# Here, $text must be 'CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US'.
-
+$text    = 'CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US';
+$result  = $parser -> parse($text);
 my(@rdn) = split(/,/, $text);
 
 for $rdn (@rdn)
@@ -95,7 +95,8 @@ for $rdn (@rdn)
 	ok($value eq ${$parser -> get_rdn_value($type)}[0], "get_rdn_value($type) works"); $count++;
 }
 
-$result = $parser -> parse('UID=nobody@example.com,DC=example,DC=com');
+$text   = 'UID=nobody@example.com,DC=example,DC=com';
+$result = $parser -> parse($text);
 @rdn    = @{$parser -> get_rdn_value('DC')};
 
 ok($rdn[0] eq 'example', "get_rdn_value('DC') works"); $count++;

@@ -15,7 +15,7 @@ my(@text)   =
 	q|cn=Nemo, c=US|,
 	q|x=#616263|,
 	q|x=#616263|,
-	q|x= |,
+	q|foo=1 + bar=2, baz=3|,
 );
 
 my($result);
