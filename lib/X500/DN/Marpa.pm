@@ -9,11 +9,13 @@ use open     qw(:std :utf8); # Undeclared streams in UTF-8.
 use Const::Exporter constants =>
 [
 	nothing_is_fatal    =>  0, # The default.
-	debug               =>  1,
+	print_errors        =>  1,
 	print_warnings      =>  2,
-	ambiguity_is_fatal  =>  4,
-	exhaustion_is_fatal =>  8,
-	long_descriptors    => 16,
+	print_debugs        =>  4,
+	ambiguity_is_fatal  =>  8,
+	exhaustion_is_fatal => 16,
+	long_descriptors    => 32,
+	return_hex_as_chars => 64,
 ];
 
 use Marpa::R2;
@@ -369,6 +371,56 @@ sub decode_result
 
 # ------------------------------------------------
 
+sub get_rdn
+{
+	my($self, $n) = @_;
+	$n        -= 1;
+	my(@rdn)  = $self -> stack -> print;
+
+	return undef if ( ($n < 0) || ($n > $#rdn) );
+	return "${$rdn[$n]}{type}=${$rdn[$n]}{value}";
+
+} # End of get_rdn.
+
+# ------------------------------------------------
+
+sub get_rdn_count
+{
+	my($self) = @_;
+	my(@rdn)  = $self -> stack -> print;
+
+	return scalar @rdn;
+
+} # End of get_rdn_count.
+
+# ------------------------------------------------
+
+sub get_rdn_type
+{
+	my($self, $n) = @_;
+	$n        -= 1;
+	my(@rdn)  = $self -> stack -> print;
+
+	return undef if ( ($n < 0) || ($n > $#rdn) );
+	return ${$rdn[$n]}{type};
+
+} # End of get_rdn_type.
+
+# ------------------------------------------------
+
+sub get_rdn_value
+{
+	my($self, $n) = @_;
+	$n        -= 1;
+	my(@rdn)  = $self -> stack -> print;
+
+	return undef if ( ($n < 0) || ($n > $#rdn) );
+	return ${$rdn[$n]}{value};
+
+} # End of get_rdn_value.
+
+# ------------------------------------------------
+
 sub dn
 {
 	my($self) = @_;
@@ -383,6 +435,23 @@ sub dn
 	return join(',', reverse @dn);
 
 } # End of dn.
+
+# ------------------------------------------------
+
+sub openssl_dn
+{
+	my($self) = @_;
+
+	my(@dn);
+
+	for my $item ($self -> stack -> print)
+	{
+		push @dn, "$$item{type}=$$item{value}";
+	}
+
+	return join('+', @dn);
+
+} # End of openssl_dn.
 
 # ------------------------------------------------
 
@@ -462,8 +531,11 @@ sub parse
 			}
 		}
 
-		my($long_form) = $self -> options & long_descriptors;
-		my($value_ref) = $self -> recce -> value;
+		my($hex_as_char) = $self -> options & return_hex_as_chars;
+		my($long_form)   = $self -> options & long_descriptors;
+		my($value_ref)   = $self -> recce -> value;
+
+		my(@hex);
 
 		if (defined $value_ref)
 		{
@@ -497,6 +569,19 @@ sub parse
 				}
 				else
 				{
+					if ($hex_as_char && (substr($value, 0, 1) eq '#') )
+					{
+						@hex   = ();
+						$value = substr($value, 1);
+
+						while ($value =~ /(..)/g)
+						{
+							push @hex, $1;
+						}
+
+						$value = join('', map{chr hex} @hex);
+					}
+
 					$self -> stack -> push({type => $type, value => $value});
 				}
 			}
@@ -505,14 +590,14 @@ sub parse
 		{
 			$result = 1;
 
-			print "Error: Parse failed\n";
+			print "Error: Parse failed\n" if ($self -> options & print_errors);
 		}
 	}
 	catch
 	{
 		$result = 1;
 
-		print "Error: Parse failed. ${_}";
+		print "Error: Parse failed. ${_}" if ($self -> options & print_errors);
 	};
 
 	# Return 0 for success and 1 for failure.
@@ -797,8 +882,12 @@ Returns a string containing the grammar used by this module.
 Returns the RDNs, separated by commas, as a single string in the reverse order compared with the
 order of the RNDs in the input text.
 
+The order reversal is discussed in section 2.1 of L<RFC4514|https://www.ietf.org/rfc/rfc4514.txt>.
+
 Hence 'cn=Nemo, c=US' is returned as 'countryName=US,commonName=Nemo' (when the
 C<long_descriptors> option is used), and as 'c=US,cn=Nemo' by default.
+
+See also L</openssl_dn()>.
 
 =head2 error_message()
 
@@ -845,9 +934,45 @@ You can set the option C<ambiguity_is_fatal> to make it fatal.
 
 See L</error_message()>.
 
+=head2 get_rdn($n)
+
+Returns a string containing the $n-th RDN (counting from 1), or undef.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn(1)> returns
+'uid=nobody@example.com'. Note the lower-case 'uid'.
+
+=head2 get_rdn_count()
+
+Returns the count of RDNs, which may be 0.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_count()> returns 3.
+
+=head2 get_rdn_type($n)
+
+Returns a string containing the $n-th RDN's (counting from 1) attribute type, or undef.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type(1)> returns 'uid'.
+
+=head2 get_rdn_value($n)
+
+Returns a string containing the $n-th RDN's (counting from 1) attribute value, or undef.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type(1)> returns
+'nobody@example.com'.
+
 =head2 new()
 
 See L</Constructor and Initialization> for details on the parameters accepted by L</new()>.
+
+=head2 openssl_dn()
+
+Returns the RDNs, separated by pluses, as a single string in the same order compared with the
+order of the RNDs in the input text.
+
+Hence 'cn=Nemo, c=US' is returned as 'commonName=Nemo+countryName=US' (when the
+C<long_descriptors> option is used), and as 'cn=Nemo+c=US' by default.
+
+See also L</dn()>.
 
 =head2 options([$bit_string])
 
@@ -917,7 +1042,8 @@ It outputs a stack, which is an object of type L<Set::Array>. See L</stack()>.
 
 Elements in this stack are in the same order as the RDNs are in the input string.
 
-The L</dn()> method returns the RDNs, separated by commas, as a single string in the reverse order.
+The L</dn()> method returns the RDNs, separated by commas, as a single string in the reverse order,
+whereas L</openssl_dn()> separates them by pluses and uses the original order.
 
 Each elements of this stack is a hashref, with these (key => value) pairs:
 
@@ -976,13 +1102,13 @@ Now the flags themselves:
 
 This is the default.
 
-It's value is 0.
+C<nothing_is_fatal> has the value of 0.
 
-=item o debug
+=item o print_errors
 
-Print extra stuff if this flag is set.
+Print error messages if this flag is set.
 
-It's value is 1.
+C<print_errors> has the value of 1.
 
 =item o print_warnings
 
@@ -1000,19 +1126,25 @@ Ambiguity is not, in and of itself, an error. But see the C<ambiguity_is_fatal> 
 
 It's tempting to call this option C<warnings>, but Perl already has C<use warnings>, so I didn't.
 
-It's value is 2.
+C<print_warnings> has the value of 2.
+
+=item o print_debugs
+
+Print extra stuff if this flag is set.
+
+C<print_debugs> has the value of 4.
 
 =item o ambiguity_is_fatal
 
 This makes L</error_number()> return 2 rather than -2.
 
-It's value is 4.
+C<ambiguity_is_fatal> has the value of 8.
 
 =item o exhaustion_is_fatal
 
 This makes L</error_number()> return 1 rather than -1.
 
-It's value is 8.
+C<exhaustion_is_fatal> has the value of 16.
 
 =item o long_descriptors
 
@@ -1040,7 +1172,32 @@ However, if this option is set, the output will contain:
 
 =back
 
-It's value is 16.
+C<long_descriptors> has the value of 32.
+
+=item o return_hex_as_chars
+
+This triggers extra processing of attribute values which start with '#':
+
+=over 4
+
+=item o The value is assumed to consist entirely of hex digits (after the '#' is discarded)
+
+=item o The digits are converted 2 at-a-time into a string of (presumably ASCII) characters
+
+=item o These characters are concatenated into a single string, which becomes the new value
+
+=back
+
+So, if this option is I<not> used, 'x=#616263' is parsed as {type => 'x', value => '#616263'},
+but if the option I<is> used, you get {type => 'x', value => 'abc'}.
+
+C<return_hex_as_chars> has the value of 64.
+
+=item o print_nothing
+
+This makes L</error_number()> return 1 rather than -1.
+
+C<print_nothing> has the value of 64.
 
 =back
 

@@ -59,7 +59,8 @@ for my $text (@text)
 			print "$$item{type} = $$item{value}. \n";
 		}
 
-		print 'DN: ', $parser -> dn, ". \n";
+		print 'DN:         ', $parser -> dn, ". \n";
+		print 'OpenSSL DN: ', $parser -> openssl_dn, ". \n";
 	}
 
 	print '-' x 50, "\n";

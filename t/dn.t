@@ -13,47 +13,54 @@ my($count)  = 0;
 my($parser) = X500::DN::Marpa -> new;
 my(@text)   =
 (
-	q||,
-	q|1.4.9=2001|,
-	q|cn=Nemo,c=US|,
-	q|cn=Nemo, c=US|,
-	q|cn = Nemo, c = US|,
-	q|cn=John Doe, o=Acme, c=US|,
-	q|cn=John Doe, o=Acme\\, Inc., c=US|,
-	q|x= |,
-	q|x=\\ |,
-	q|x = \\ |,
-	q|x=\\ \\ |,
-	q|x=\\#\"\\41|,
-	q|x=#616263|,
-	q|SN=Lu\C4\8Di\C4\87|,			# 'Lučić'.
-	q|foo=1 + bar=2, baz=3|,
-	q|UID=jsmith,DC=example,DC=net|,
-	q|OU=Sales+CN=J.  Smith,DC=example,DC=net|,
-	q|CN=James \"Jim\" Smith\, III,DC=example,DC=net|,
-	q|CN=Before\0dAfter,DC=example,DC=net|,
-	q|1.3.6.1.4.1.1466.0=#04024869|,
-	q|UID=nobody@example.com,DC=example,DC=com|,
-	q|CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US|,
+	[0, undef, q|x|],	# Deliberate error.
+	[0, undef, q||],
+	[1, q|1.4.9=2001|, q|1.4.9=2001|],
+	[2, q|cn=Nemo|, q|cn=Nemo,c=US|],
+	[2, q|cn=Nemo|, q|cn=Nemo, c=US|],
+	[2, q|cn=Nemo|, q|cn = Nemo, c = US|],
+	[3, q|cn=John Doe|, q|cn=John Doe, o=Acme, c=US|],
+	[3, q|cn=John Doe|, q|cn=John Doe, o=Acme\\, Inc., c=US|],
+	[1, q|x=|, q|x= |],
+	[1, q|x=\ |, q|x=\\ |],
+	[1, q|x=\ |, q|x = \\ |],
+	[1, q|x=\ \ |, q|x=\\ \\ |],
+	[1, q|x=\#\"\41|, q|x=\\#\"\\41|],
+	[1, q|x=abc|, q|x=#616263|],
+	[1, q|sn=Lu\C4\8Di\C4\87|, q|SN=Lu\C4\8Di\C4\87|],			# 'Lučić'.
+	[3, q|foo=1|, q|foo=1 + bar=2, baz=3|],
+	[3, q|uid=jsmith|, q|UID=jsmith,DC=example,DC=net|],
+	[4, q|ou=Sales|, q|OU=Sales+CN=J.  Smith,DC=example,DC=net|],
+	[3, q|cn=James \"Jim\" Smith\, III|, q|CN=James \"Jim\" Smith\, III,DC=example,DC=net|],
+	[3, q|cn=Before\0dAfter|, q|CN=Before\0dAfter,DC=example,DC=net|],
+	[3, q|uid=nobody@example.com|, q|UID=nobody@example.com,DC=example,DC=com|],
+	[6, q|cn=John Smith|, q|CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US|],
 );
 
-my($result);
+$parser -> options(return_hex_as_chars);
 
-for my $text (@text)
+my($first);
+my($result, $rdn_count);
+my($type, $text);
+my($value);
+
+for my $item (@text)
 {
-	$count++;
+	$rdn_count = $$item[0];
+	$first     = $$item[1];
+	$type      = defined($first) ? (split(/=/, $first) )[0]: undef;
+	$value     = defined($first) ? (split(/=/, $first) )[1]: undef;
+	$text      = $$item[2];
+	$result    = $parser -> parse($text);
 
-	$result = $parser -> parse($text);
-
-	ok($result == 0, "Parsed: |$text|");
+	ok($result == 0, "Parsed: |$text|"); $count++;
 
 	if ($result == 0)
 	{
-		for my $item ($parser -> stack -> print)
-		{
-			#diag "$$item{type} = $$item{value}.";
-		}
-
+		ok($rdn_count == $parser -> get_rdn_count,    'get_rdn_count() works');   $count++;
+		ok($first     eq $parser -> get_rdn(1),       'get_rdn($n) works');       $count++;
+		ok($type      eq $parser -> get_rdn_type(1),  'get_rdn_type($n) works');  $count++;
+		ok($value     eq $parser -> get_rdn_value(1), 'get_rdn_value($n) works'); $count++;
 	}
 }
 
