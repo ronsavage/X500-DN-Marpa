@@ -10,7 +10,7 @@ use X500::DN::Marpa ':constants';
 my(%count)  = (fail => 0, success => 0, total => 0);
 my($parser) = X500::DN::Marpa -> new
 (
-	options => long_descriptors,
+	options => long_descriptors | return_hex_as_chars,
 );
 my(@text) =
 (
@@ -28,7 +28,7 @@ my(@text) =
 	q|x=\\#\"\\41|,
 	q|x=#616263|,
 	q|SN=Lu\C4\8Di\C4\87|,		# 'Lučić'.
-	q|foo=1 + bar=2, baz=3|,
+	q|foo=FOO + bar=BAR + frob=FROB, baz=BAZ|,
 	q|UID=jsmith,DC=example,DC=net|,
 	q|OU=Sales+CN=J.  Smith,DC=example,DC=net|,
 	q|CN=James \"Jim\" Smith\, III,DC=example,DC=net|,
@@ -44,7 +44,7 @@ for my $text (@text)
 {
 	$count{total}++;
 
-	print "Parsing |$text|. \n";
+	print "# $count{total}. Parsing |$text|. \n";
 
 	$result = $parser -> parse($text);
 
@@ -56,7 +56,7 @@ for my $text (@text)
 
 		for my $item ($parser -> stack -> print)
 		{
-			print "$$item{type} = $$item{value}. \n";
+			print "$$item{type} = $$item{value}. count = $$item{count}. \n";
 		}
 
 		print 'DN:         ', $parser -> dn, ". \n";

@@ -722,8 +722,8 @@ C<X500::DN::Marpa> - Parse X.500 DNs
 		q|x=\\ \\ |,
 		q|x=\\#\"\\41|,
 		q|x=#616263|,
-		q|SN=Lu\C4\8Di\C4\87|,  # 'Lučić'.
-		q|foo=1 + bar=2, baz=3|,
+		q|SN=Lu\C4\8Di\C4\87|,		# 'Lučić'.
+		q|foo=FOO + bar=BAR + frob=FROB, baz=BAZ|,
 		q|UID=jsmith,DC=example,DC=net|,
 		q|OU=Sales+CN=J.  Smith,DC=example,DC=net|,
 		q|CN=James \"Jim\" Smith\, III,DC=example,DC=net|,
@@ -739,7 +739,7 @@ C<X500::DN::Marpa> - Parse X.500 DNs
 	{
 		$count{total}++;
 
-		print "Parsing |$text|. \n";
+		print "# $count{total}. Parsing |$text|. \n";
 
 		$result = $parser -> parse($text);
 
@@ -751,8 +751,11 @@ C<X500::DN::Marpa> - Parse X.500 DNs
 
 			for my $item ($parser -> stack -> print)
 			{
-				print "$$item{type} = $$item{value}. \n";
+				print "$$item{type} = $$item{value}. count = $$item{count}. \n";
 			}
+
+			print 'DN:         ', $parser -> dn, ". \n";
+			print 'OpenSSL DN: ', $parser -> openssl_dn, ". \n";
 		}
 
 		print '-' x 50, "\n";
@@ -765,122 +768,39 @@ C<X500::DN::Marpa> - Parse X.500 DNs
 
 See scripts/synopsis.pl.
 
-This is the printout of synopsis.pl:
+This is part of the printout of synopsis.pl:
 
-	Parsing ||.
+	# 3. Parsing |cn=Nemo,c=US|.
 	Parse result: 0 (0 is success)
+	commonName = Nemo. count = 1.
+	countryName = US. count = 1.
+	DN:         countryName=US,commonName=Nemo.
+	OpenSSL DN: commonName=Nemo+countryName=US.
 	--------------------------------------------------
-	Parsing |1.4.9=2001|.
+	...
+	--------------------------------------------------
+	# 13. Parsing |x=#616263|.
 	Parse result: 0 (0 is success)
-	1.4.9 = 2001.
+	x = #616263. count = 1.
+	DN:         x=#616263.
+	OpenSSL DN: x=#616263.
 	--------------------------------------------------
-	Parsing |cn=Nemo,c=US|.
+	...
+	--------------------------------------------------
+	# 15. Parsing |foo=FOO + bar=BAR + frob=FROB, baz=BAZ|.
 	Parse result: 0 (0 is success)
-	commonName = Nemo.
-	countryName = US.
-	--------------------------------------------------
-	Parsing |cn=Nemo, c=US|.
-	Parse result: 0 (0 is success)
-	commonName = Nemo.
-	countryName = US.
-	--------------------------------------------------
-	Parsing |cn = Nemo, c = US|.
-	Parse result: 0 (0 is success)
-	commonName = Nemo.
-	countryName = US.
-	--------------------------------------------------
-	Parsing |cn=John Doe, o=Acme, c=US|.
-	Parse result: 0 (0 is success)
-	commonName = John Doe.
-	organizationName = Acme.
-	countryName = US.
-	--------------------------------------------------
-	Parsing |cn=John Doe, o=Acme\, Inc., c=US|.
-	Parse result: 0 (0 is success)
-	commonName = John Doe.
-	organizationName = Acme\, Inc..
-	countryName = US.
-	--------------------------------------------------
-	Parsing |x= |.
-	Parse result: 0 (0 is success)
-	x = .
-	--------------------------------------------------
-	Parsing |x=\ |.
-	Parse result: 0 (0 is success)
-	x = \ .
-	--------------------------------------------------
-	Parsing |x = \ |.
-	Parse result: 0 (0 is success)
-	x = \ .
-	--------------------------------------------------
-	Parsing |x=\ \ |.
-	Parse result: 0 (0 is success)
-	x = \ \ .
-	--------------------------------------------------
-	Parsing |x=\#\"\41|.
-	Parse result: 0 (0 is success)
-	x = \#\"\41.
-	--------------------------------------------------
-	Parsing |x=#616263|.
-	Parse result: 0 (0 is success)
-	x = #616263.
-	--------------------------------------------------
-	Parsing |SN=Lu\C4\8Di\C4\87|.
-	Parse result: 0 (0 is success)
-	sn = Lu\C4\8Di\C4\87.
-	--------------------------------------------------
-	Parsing |foo=1 + bar=2, baz=3|.
-	Parse result: 0 (0 is success)
-	foo = 1.
-	bar = 2.
-	baz = 3.
-	--------------------------------------------------
-	Parsing |UID=jsmith,DC=example,DC=net|.
-	Parse result: 0 (0 is success)
-	userId = jsmith.
-	domainComponent = example.
-	domainComponent = net.
-	--------------------------------------------------
-	Parsing |OU=Sales+CN=J.  Smith,DC=example,DC=net|.
-	Parse result: 0 (0 is success)
-	organizationalUnitName = Sales.
-	commonName = J.  Smith.
-	domainComponent = example.
-	domainComponent = net.
-	--------------------------------------------------
-	Parsing |CN=James \"Jim\" Smith\, III,DC=example,DC=net|.
-	Parse result: 0 (0 is success)
-	commonName = James \"Jim\" Smith\, III.
-	domainComponent = example.
-	domainComponent = net.
-	--------------------------------------------------
-	Parsing |CN=Before\0dAfter,DC=example,DC=net|.
-	Parse result: 0 (0 is success)
-	commonName = Before\0dAfter.
-	domainComponent = example.
-	domainComponent = net.
-	--------------------------------------------------
-	Parsing |1.3.6.1.4.1.1466.0=#04024869|.
-	Parse result: 0 (0 is success)
-	1.3.6.1.4.1.1466.0 = #04024869.
-	--------------------------------------------------
-	Parsing |UID=nobody@example.com,DC=example,DC=com|.
-	Parse result: 0 (0 is success)
-	userId = nobody@example.com.
-	domainComponent = example.
-	domainComponent = com.
-	--------------------------------------------------
-	Parsing |CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US|.
-	Parse result: 0 (0 is success)
-	commonName = John Smith.
-	organizationalUnitName = Sales.
-	organizationName = ACME Limited.
-	localityName = Moab.
-	stateOrProvinceName = Utah.
-	countryName = US.
-	--------------------------------------------------
+	foo = FOO+bar=BAR+frob=FROB. count = 3.
+	baz = BAZ. count = 1.
+	DN:         baz=BAZ,foo=FOO+bar=BAR+frob=FROB.
+	OpenSSL DN: foo=FOO+bar=BAR+frob=FROB+baz=BAZ.
 
-	Statistics: fail => 0, success => 22, total => 22.
+If you set the option C<return_hex_as_chars>, as discussed in the L</FAQ>, then case 13 will print:
+
+	# 13. Parsing |x=#616263|.
+	Parse result: 0 (0 is success)
+	x = abc. count = 1.
+	DN:         x=abc.
+	OpenSSL DN: x=abc.
 
 =head1 Description
 
