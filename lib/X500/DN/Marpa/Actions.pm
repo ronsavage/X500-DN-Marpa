@@ -42,7 +42,7 @@ sub attribute_value
 	return
 	{
 		type  => 'value',
-		value => decode_result($t || ''),
+		value => defined($t) ? decode_result($t) : undef,
 	};
 
 } # End of attribute_value.

@@ -15,6 +15,7 @@ my(@text)   =
 	q|cn=Nemo, c=US|,
 	q|x=#616263|,
 	q|x=#616263|,
+	q|x= |,
 );
 
 my($result);

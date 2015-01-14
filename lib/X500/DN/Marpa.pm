@@ -410,12 +410,35 @@ sub get_rdn_type
 
 sub get_rdn_value
 {
-	my($self, $n) = @_;
-	$n        -= 1;
-	my(@rdn)  = $self -> stack -> print;
+	my($self, $key) = @_;
+	my(@rdn) = $self -> stack -> print;
 
-	return undef if ( ($n < 0) || ($n > $#rdn) );
-	return ${$rdn[$n]}{value};
+	my($result);
+
+	if ($key =~ /^\d+$/)
+	{
+		$key -= 1;
+
+		if ( ($key < 0) || ($key > $#rdn) )
+		{
+			$result = undef; # Yes, redundant.
+		}
+		else
+		{
+			$result = ${$rdn[$key]}{value}; # Returns undef for an RDN of 'x='.
+		}
+	}
+	else
+	{
+		$result = [];
+
+		for my $rdn (@rdn)
+		{
+			push @$result, $$rdn{value} if (lc $$rdn{type} eq lc $key);
+		}
+	}
+
+	return $result;
 
 } # End of get_rdn_value.
 
@@ -936,10 +959,14 @@ See L</error_message()>.
 
 =head2 get_rdn($n)
 
-Returns a string containing the $n-th RDN (counting from 1), or undef.
+Returns a string containing the $n-th RDN, or undef.
+
+$n counts from 1.
 
 If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn(1)> returns
 'uid=nobody@example.com'. Note the lower-case 'uid'.
+
+See t/dn.t.
 
 =head2 get_rdn_count()
 
@@ -947,18 +974,43 @@ Returns the count of RDNs, which may be 0.
 
 If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_count()> returns 3.
 
+See t/dn.t.
+
 =head2 get_rdn_type($n)
 
-Returns a string containing the $n-th RDN's (counting from 1) attribute type, or undef.
+Returns a string containing the $n-th RDN's attribute type, or undef.
+
+$n counts from 1.
 
 If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type(1)> returns 'uid'.
 
-=head2 get_rdn_value($n)
+See t/dn.t.
 
-Returns a string containing the $n-th RDN's (counting from 1) attribute value, or undef.
+=head2 get_rdn_value($number_or_string)
+
+This method accepts either an integer or a string:
+
+=over 4
+
+=item o $number_or_string is a number ($n)
+
+Returns a string containing the $n-th RDN's attribute value, or undef.
+
+$n counts from 1.
 
 If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type(1)> returns
 'nobody@example.com'.
+
+=item o $number_or_string is a string ($type)
+
+Returns an arrayref containing the RDN attribute values for the attribute type $type, or [].
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type('DC')> returns
+['example', 'com'].
+
+=back
+
+See t/dn.t.
 
 =head2 new()
 
