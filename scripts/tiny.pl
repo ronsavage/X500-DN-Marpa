@@ -42,7 +42,7 @@ for my $text (@text)
 
 		for my $item ($parser -> stack -> print)
 		{
-			print "$$item{type} = $$item{value}. \n";
+			print "$$item{type} = $$item{value}. multivalued = $$item{multivalued}. \n";
 		}
 
 		print 'DN:         ', $parser -> dn, ". \n";

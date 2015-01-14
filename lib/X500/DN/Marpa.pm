@@ -373,23 +373,23 @@ sub decode_result
 
 sub _combine
 {
-	my($self) = @_;
-	my(@temp) = $self -> stack -> print;
+	my($self)        = @_;
+	my(@temp)        = $self -> stack -> print;
+	my($multivalued) = 0;
 
 	my(@dn);
-	my($multi);
 
 	for (my $i = 0; $i <= $#temp; $i++)
 	{
-		if ($temp[$i]{multivalue})
+		if ($temp[$i]{multivalued})
 		{
-			$multi = 'yes';
+			$multivalued = 1;
 		}
-		elsif ($multi)
+		elsif ($multivalued)
 		{
-			$multi = undef;
-
-			$dn[$#dn]{value} .= "+$temp[$i]{type}=$temp[$i]{value}";
+			$dn[$#dn]{multivalued} = 1;
+			$dn[$#dn]{value}       .= "+$temp[$i]{type}=$temp[$i]{value}";
+			$multivalued           = 0;
 		}
 		else
 		{
@@ -591,7 +591,7 @@ sub parse
 
 				if ($item eq '+')
 				{
-					$self -> stack -> push({multivalue => 1});
+					$self -> stack -> push({multivalued => 1});
 
 					next;
 				}
@@ -628,7 +628,7 @@ sub parse
 						$value = join('', map{chr hex} @hex);
 					}
 
-					$self -> stack -> push({multivalue => 0, type => $type, value => $value});
+					$self -> stack -> push({multivalued => 0, type => $type, value => $value});
 				}
 			}
 
