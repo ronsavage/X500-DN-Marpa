@@ -381,18 +381,25 @@ sub _combine
 
 	for (my $i = 0; $i <= $#temp; $i++)
 	{
+		# The 'multivalued' key is use for temporary storage. See parse().
+		# 'count' holds the count of RDNs within this stack element.
+
 		if ($temp[$i]{multivalued})
 		{
 			$multivalued = 1;
 		}
 		elsif ($multivalued)
 		{
-			$dn[$#dn]{multivalued} = 1;
-			$dn[$#dn]{value}       .= "+$temp[$i]{type}=$temp[$i]{value}";
-			$multivalued           = 0;
+			$multivalued     =  0;
+			$dn[$#dn]{count} += 1;
+			$dn[$#dn]{value} .= "+$temp[$i]{type}=$temp[$i]{value}";
 		}
 		else
 		{
+			# Zap 'multivalued' so it does not end up in the stack.
+
+			undef $temp[$i]{multivalued};
+
 			push @dn, $temp[$i];
 		}
 	}
@@ -427,12 +434,23 @@ sub get_rdn
 
 sub get_rdn_count
 {
-	my($self) = @_;
+	my($self, $n) = @_;
+	$n        -= 1;
 	my(@rdn)  = $self -> stack -> print;
 
-	return scalar @rdn;
+	return ( ($n < 0) || ($n > $#rdn) ) ? 0 : ${$rdn[$n]}{count};
 
 } # End of get_rdn_count.
+
+# ------------------------------------------------
+
+sub get_rdn_length
+{
+	my($self) = @_;
+
+	return $self -> stack -> length;
+
+} # End of get_rdn_length.
 
 # ------------------------------------------------
 
@@ -442,7 +460,7 @@ sub get_rdn_type
 	$n        -= 1;
 	my(@rdn)  = $self -> stack -> print;
 
-	return ( ($n < 0) || ($n > $#rdn) ) ? undef : ${$rdn[$n]}{type};
+	return ( ($n < 0) || ($n > $#rdn) ) ? '' : ${$rdn[$n]}{type};
 
 } # End of get_rdn_type.
 
@@ -451,14 +469,15 @@ sub get_rdn_type
 sub get_rdn_value
 {
 	my($self, $n) = @_;
-	$n       -= 1;
-	my(@rdn) = $self -> stack -> print;
-
-	my($result);
+	$n          -= 1;
+	my(@rdn)    = $self -> stack -> print;
+	my($result) = '';
 
 	if ( ($n >= 0) && ($n <= $#rdn) )
 	{
-		$result = ${$rdn[$n]}{value}; # Returns '' for an RDN of 'x='.
+		# This returns '' for an RDN of 'x='. See *::Actions.attribute_value().
+
+		$result = ${$rdn[$n]}{value};
 	}
 
 	return $result;
@@ -591,6 +610,9 @@ sub parse
 
 				if ($item eq '+')
 				{
+					# The 'multivalued' key is use for temporary storage. See _combine().
+					# 'count' holds the count of RDNs within this stack element.
+
 					$self -> stack -> push({multivalued => 1});
 
 					next;
@@ -628,7 +650,10 @@ sub parse
 						$value = join('', map{chr hex} @hex);
 					}
 
-					$self -> stack -> push({multivalued => 0, type => $type, value => $value});
+					# The 'multivalued' key is use for temporary storage. See _combine().
+					# 'count' holds the count of RDNs within this stack element.
+
+					$self -> stack -> push({count => 1, multivalued => 0, type => $type, value => $value});
 				}
 			}
 
@@ -984,7 +1009,7 @@ See L</error_message()>.
 
 =head2 get_rdn($n)
 
-Returns a string containing the $n-th RDN, or undef.
+Returns a string containing the $n-th RDN, or returns '' if $n is out of range.
 
 $n counts from 1.
 
@@ -993,17 +1018,34 @@ If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn(1)> return
 
 See t/dn.t.
 
-=head2 get_rdn_count()
+=head2 get_rdn_count($n)
 
-Returns the count of RDNs, which may be 0.
+Returns a string containing the $n-th RDN's count (multivalue indicator), or returns 0 if $n is out
+of range.
 
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_count()> returns 3.
+$n counts from 1.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_count(1)> returns 1.
+
+If the input is 'foo=FOO+bar=BAR+frob=FROB, baz=BAZ', C<get_rdn_count(1)> returns 3.
+
+Not to be confused with L</get_rdn_length()>.
+
+See t/dn.t.
+
+=head2 get_rdn_length()
+
+Returns the number of RDNs, which may be 0.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_length()> returns 3.
+
+Not to be confused with L</get_rdn_count($n)>.
 
 See t/dn.t.
 
 =head2 get_rdn_type($n)
 
-Returns a string containing the $n-th RDN's attribute type, or undef.
+Returns a string containing the $n-th RDN's attribute type, or returns '' if $n is out of range.
 
 $n counts from 1.
 
@@ -1011,29 +1053,24 @@ If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type(1)> r
 
 See t/dn.t.
 
-=head2 get_rdn_value($number_or_string)
+=head2 get_rdn_value($n)
 
-This method accepts either an integer or a string:
-
-=over 4
-
-=item o $number_or_string is a number ($n)
-
-Returns a string containing the $n-th RDN's attribute value, or undef.
+Returns a string containing the $n-th RDN's attribute value, or returns '' if $n is out of
+range.
 
 $n counts from 1.
 
 If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type(1)> returns
 'nobody@example.com'.
 
-=item o $number_or_string is a string ($type)
+See t/dn.t.
+
+=head2 get_rdn_values($type)
 
 Returns an arrayref containing the RDN attribute values for the attribute type $type, or [].
 
 If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type('DC')> returns
 ['example', 'com'].
-
-=back
 
 See t/dn.t.
 
@@ -1109,28 +1146,63 @@ See L</error_message()> and L</error_number()>.
 
 See also L</What are the possible values for the 'options' parameter to new()?> below.
 
-=head2 Does this package support Unicode/UTF8?
+=head2 What is the structure in RAM of the parsed data?
 
-Handling of UTF8 is discussed in one of the RFCs listed in L</References>, below.
-
-=head2 What does this package output?
-
-It outputs a stack, which is an object of type L<Set::Array>. See L</stack()>.
+The module outputs a stack, which is an object of type L<Set::Array>. See L</stack()>.
 
 Elements in this stack are in the same order as the RDNs are in the input string.
 
 The L</dn()> method returns the RDNs, separated by commas, as a single string in the reverse order,
 whereas L</openssl_dn()> separates them by pluses and uses the original order.
 
-Each elements of this stack is a hashref, with these (key => value) pairs:
+Each element of this stack is a hashref, with these (key => value) pairs:
 
 =over 4
 
+=item o count => $number
+
+The number of attribute types and values in a (possibly multivalued) RDN.
+
+$number counts from 1.
+
 =item o type => $type
+
+The attribute type.
 
 =item o value => $value
 
+The attribute value.
+
 =back
+
+Sample DNs:
+
+Note: These examples assume the default case of the option C<long_descriptors> (discussed below)
+I<not> being used.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', the stack will contain:
+
+=over 4
+
+=item o [0]: {count => 1, type => 'uid', value => 'nobody@example.com'}
+
+=item o [1]: {count => 1, type => 'dc', value => 'example'}
+
+=item o [2]: {count => 1, type => 'dc', value => 'com'}
+
+=back
+
+If the input is 'foo=FOO+bar=BAR+frob=FROB, baz=BAZ', the stack will contain:
+
+=over 4
+
+=item o [0]: {count => 3, type => 'foo', value => 'FOO+bar=BAR+frob=FROB'}
+
+=item o [1]: {count => 1, type => 'baz', value => 'BAZ'}
+
+=back
+
+Sample Code:
 
 A typical script uses code like this (copied from scripts/tiny.pl):
 
@@ -1142,7 +1214,7 @@ A typical script uses code like this (copied from scripts/tiny.pl):
 	{
 		for my $item ($parser -> stack -> print)
 		{
-			print "$$item{type} = $$item{value}. \n";
+			print "$$item{type} = $$item{value}. count = $$item{count}. \n";
 		}
 	}
 
@@ -1233,9 +1305,9 @@ without setting this option:
 
 =over 4
 
-=item o [0]: {type => 'cn', value => 'Nemo'}
+=item o [0]: {count => 1, type => 'cn', value => 'Nemo'}
 
-=item o [1]: {type => 'c', value => 'US'}
+=item o [1]: {count => 1, type => 'c', value => 'US'}
 
 =back
 
@@ -1243,9 +1315,9 @@ However, if this option is set, the output will contain:
 
 =over 4
 
-=item o [0]: {type => 'commonName', value => 'Nemo'}
+=item o [0]: {count => 1, type => 'commonName', value => 'Nemo'}
 
-=item o [1]: {type => 'countryName', value => 'US'}
+=item o [1]: {count => 1, type => 'countryName', value => 'US'}
 
 =back
 
@@ -1270,13 +1342,11 @@ but if the option I<is> used, you get {type => 'x', value => 'abc'}.
 
 C<return_hex_as_chars> has the value of 64.
 
-=item o print_nothing
-
-This makes L</error_number()> return 1 rather than -1.
-
-C<print_nothing> has the value of 64.
-
 =back
+
+=head2 Does this package support Unicode/UTF8?
+
+Handling of UTF8 is discussed in one of the RFCs listed in L</References>, below.
 
 =head2 What is the homepage of Marpa?
 
