@@ -15,7 +15,7 @@ my(@text)   =
 	q|cn=Nemo, c=US|,
 	q|x=#616263|,
 	q|x=#616263|,
-	q|foo=1 + bar=2, baz=3|,
+	q|UID=12345, OU=Engineering, CN=Kurt Zeilenga+L=Redwood Shores|,
 );
 
 my($result);

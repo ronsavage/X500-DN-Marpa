@@ -374,27 +374,14 @@ sub decode_result
 sub _combine
 {
 	my($self) = @_;
-
-	my(@temp);
-
-	for my $item ($self -> stack -> print)
-	{
-		if ($$item{multi})
-		{
-			push @temp, 'multi';
-		}
-		else
-		{
-			push @temp, defined($$item{value}) ? "$$item{type}=$$item{value}" : "$$item{type}=";
-		}
-	}
+	my(@temp) = $self -> stack -> print;
 
 	my(@dn);
 	my($multi);
 
 	for (my $i = 0; $i <= $#temp; $i++)
 	{
-		if ($temp[$i] eq 'multi')
+		if ($temp[$i]{multivalue})
 		{
 			$multi = 'yes';
 		}
@@ -402,7 +389,7 @@ sub _combine
 		{
 			$multi = undef;
 
-			$dn[$#dn] .= " + $temp[$i]";
+			$dn[$#dn]{value} .= "+$temp[$i]{type}=$temp[$i]{value}";
 		}
 		else
 		{
@@ -410,7 +397,7 @@ sub _combine
 		}
 	}
 
-	return [@dn];
+	$self -> stack(Set::Array -> new(@dn) );
 
 } # End of _combine.
 
@@ -420,7 +407,7 @@ sub dn
 {
 	my($self) = @_;
 
-	return join(',', reverse @{$self -> stack});
+	return join(',', map{"$$_{type}=$$_{value}"} reverse @{$self -> stack});
 
 } # End of dn.
 
@@ -432,8 +419,7 @@ sub get_rdn
 	$n        -= 1;
 	my(@rdn)  = $self -> stack -> print;
 
-	return undef if ( ($n < 0) || ($n > $#rdn) );
-	return "${$rdn[$n]}{type}=${$rdn[$n]}{value}";
+	return ( ($n < 0) || ($n > $#rdn) ) ? '' : "${$rdn[$n]}{type}=${$rdn[$n]}{value}";
 
 } # End of get_rdn.
 
@@ -456,8 +442,7 @@ sub get_rdn_type
 	$n        -= 1;
 	my(@rdn)  = $self -> stack -> print;
 
-	return undef if ( ($n < 0) || ($n > $#rdn) );
-	return ${$rdn[$n]}{type};
+	return ( ($n < 0) || ($n > $#rdn) ) ? undef : ${$rdn[$n]}{type};
 
 } # End of get_rdn_type.
 
@@ -465,32 +450,15 @@ sub get_rdn_type
 
 sub get_rdn_value
 {
-	my($self, $key) = @_;
+	my($self, $n) = @_;
+	$n       -= 1;
 	my(@rdn) = $self -> stack -> print;
 
 	my($result);
 
-	if ($key =~ /^\d+$/)
+	if ( ($n >= 0) && ($n <= $#rdn) )
 	{
-		$key -= 1;
-
-		if ( ($key < 0) || ($key > $#rdn) )
-		{
-			$result = undef; # Yes, redundant.
-		}
-		else
-		{
-			$result = ${$rdn[$key]}{value}; # Returns undef for an RDN of 'x='.
-		}
-	}
-	else
-	{
-		$result = [];
-
-		for my $rdn (@rdn)
-		{
-			push @$result, $$rdn{value} if (lc $$rdn{type} eq lc $key);
-		}
+		$result = ${$rdn[$n]}{value}; # Returns '' for an RDN of 'x='.
 	}
 
 	return $result;
@@ -499,11 +467,27 @@ sub get_rdn_value
 
 # ------------------------------------------------
 
+sub get_rdn_values
+{
+	my($self, $key) = @_;
+	my($result) = [];
+
+	for my $rdn ($self -> stack -> print)
+	{
+		push @$result, $$rdn{value} if (lc $$rdn{type} eq lc $key);
+	}
+
+	return $result;
+
+} # End of get_rdn_values.
+
+# ------------------------------------------------
+
 sub openssl_dn
 {
 	my($self) = @_;
 
-	return join('+', @{$self -> stack});
+	return join('+', map{"$$_{type}=$$_{value}"} @{$self -> stack});
 
 } # End of openssl_dn.
 
@@ -607,7 +591,7 @@ sub parse
 
 				if ($item eq '+')
 				{
-					$self -> stack -> push({multi => 'yes'});
+					$self -> stack -> push({multivalue => 1});
 
 					next;
 				}
@@ -644,11 +628,11 @@ sub parse
 						$value = join('', map{chr hex} @hex);
 					}
 
-					$self -> stack -> push({type => $type, value => $value});
+					$self -> stack -> push({multivalue => 0, type => $type, value => $value});
 				}
 			}
 
-			$self -> stack(Set::Array -> new(@{$self -> _combine}) );
+			$self -> _combine;
 		}
 		else
 		{
