@@ -43,11 +43,13 @@ my $type_count = $rdn -> getAttributeTypes;
 my(@types)     = $rdn -> getAttributeTypes;
 my $value      = $rdn -> getAttributeValue('1.4.9');
 my(@values)    = $rdn -> getAttributeValue('1.4.9');
+my($has_multi) = $dn -> hasMultivaluedRDNs;
 
-ok($type_count == 1,       'getAttributeTypes() works'); $test_count++;
-ok($types[0]   eq '1.4.9', 'getAttributeTypes() works'); $test_count++;
-ok($value      eq '2001',  'getAttributeValue() works'); $test_count++;
-ok($values[0]  eq '2001',  'getAttributeValue() works'); $test_count++;
+ok($type_count == 1,       'getAttributeTypes() works');  $test_count++;
+ok($types[0]   eq '1.4.9', 'getAttributeTypes() works');  $test_count++;
+ok($value      eq '2001',  'getAttributeValue() works');  $test_count++;
+ok($values[0]  eq '2001',  'getAttributeValue() works');  $test_count++;
+ok($has_multi  == 0,       'hasMultivaluedRDNs() works'); $test_count++;
 
 # Test set 3.
 
@@ -65,10 +67,12 @@ $rdn        = $dn -> getRDN(0);
 $type_count = $rdn -> getAttributeTypes;
 @types      = $rdn -> getAttributeTypes;
 @values     = $rdn -> getAttributeValue('foo');
+$has_multi  = $dn -> hasMultivaluedRDNs;
 
 ok($type_count == 3,    'getAttributeTypes() works'); $test_count++;
 ok($types[0] eq 'foo',  'getAttributeTypes() works'); $test_count++;
 ok($types[1] eq 'bar',  'getAttributeTypes() works'); $test_count++;
+ok($has_multi  == 1,    'hasMultivaluedRDNs() works'); $test_count++;
 
 ok($values[0] eq 'FOO+bar=BAR+frob=FROB', 'getAttributeValue() works'); $test_count++;
 
@@ -76,13 +80,6 @@ $rdn    = $dn -> getRDN(1);
 @values = $rdn -> getAttributeValue('baz');
 
 ok($values[0] eq 'BAZ', 'getAttributeValue() works'); $test_count++;
-
-=pod
-
-ok($rdn && $rdn->getAttributeValue ('1.4.9'), '2001');
-ok($dn && $dn->getRFC2253String, '1.4.9=2001');
-
-=cut
 
 print "# Internal test count: $test_count\n";
 

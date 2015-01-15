@@ -14,7 +14,6 @@ my($rdn);
 our $VERSION = '1.00';
 
 # ------------------------------------------------
-# Tested.
 
 sub getAttributeTypes
 {
@@ -38,7 +37,6 @@ sub getAttributeValue
 } # End of getAttributeValue.
 
 # ------------------------------------------------
-# Tested.
 
 sub getRFC2253String
 {
@@ -49,7 +47,6 @@ sub getRFC2253String
 } # End of getRFC2253String.
 
 # ------------------------------------------------
-# Tested.
 
 sub getRDN
 {
@@ -63,7 +60,6 @@ sub getRDN
 } # End of getRDN.
 
 # ------------------------------------------------
-# Tested.
 
 sub getRDNs
 {
@@ -74,7 +70,6 @@ sub getRDNs
 } # End of getRDNs.
 
 # ------------------------------------------------
-# Tested.
 
 sub getX500String
 {
@@ -85,7 +80,22 @@ sub getX500String
 } # End of getX500String.
 
 # ------------------------------------------------
-# Tested.
+
+sub hasMultivaluedRDNs
+{
+	my($self)   = @_;
+	my($result) = 0;
+
+	for my $rdn ($dn -> stack -> print)
+	{
+		$result = 1 if ($$rdn{count} > 1);
+	}
+
+	return $result;
+
+} # End of hasMultivaluedRDNs.
+
+# ------------------------------------------------
 
 sub new
 {
@@ -98,7 +108,6 @@ sub new
 } # End of new.
 
 # ------------------------------------------------
-# Tested.
 
 sub ParseRFC2253
 {
