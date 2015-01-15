@@ -22,9 +22,9 @@ diag "Parsing: $text.";
 
 my($dn) = $parser -> ParseRFC2253($text);
 
-ok($dn -> getRDNs          == 0,    'getRDNs() works');          $test_count++;
-ok($dn -> getRFC2253String eq '',   'getRFC2253String() works'); $test_count++;
-ok($dn -> getX500String    eq '{}', 'getX500String() works');    $test_count++;
+ok($dn -> getRDNs          == 0,         'getRDNs() works');          $test_count++;
+ok($dn -> getRFC2253String eq $text,     'getRFC2253String() works'); $test_count++;
+ok($dn -> getX500String    eq "{$text}", 'getX500String() works');    $test_count++;
 
 # Test set 2.
 
@@ -34,16 +34,20 @@ diag "Parsing: $text.";
 
 $dn = $parser -> ParseRFC2253($text);
 
-ok($dn -> getRDNs() == 1, 'getRDNs() works'); $test_count++;
+ok($dn -> getRDNs          == 1,         'getRDNs() works');          $test_count++;
+ok($dn -> getRFC2253String eq $text,     'getRFC2253String() works'); $test_count++;
+ok($dn -> getX500String    eq "{$text}", 'getX500String() works');    $test_count++;
 
 my($rdn)       = $dn -> getRDN(0);
 my $type_count = $rdn -> getAttributeTypes;
 my(@types)     = $rdn -> getAttributeTypes;
+my $value      = $rdn -> getAttributeValue('1.4.9');
 my(@values)    = $rdn -> getAttributeValue('1.4.9');
 
-ok($type_count == 1,     'getAttributeTypes() works'); $test_count++;
-ok($types[0] eq '1.4.9', 'getAttributeTypes() works'); $test_count++;
-ok($values[0] eq '2001', 'getAttributeValue() works'); $test_count++;
+ok($type_count == 1,       'getAttributeTypes() works'); $test_count++;
+ok($types[0]   eq '1.4.9', 'getAttributeTypes() works'); $test_count++;
+ok($value      eq '2001',  'getAttributeValue() works'); $test_count++;
+ok($values[0]  eq '2001',  'getAttributeValue() works'); $test_count++;
 
 # Test set 3.
 
@@ -53,7 +57,9 @@ diag "Parsing: $text.";
 
 $dn = $parser -> ParseRFC2253($text);
 
-ok($dn -> getRDNs() == 2, 'getRDNs() works'); $test_count++;
+ok($dn -> getRDNs          == 2,                                     'getRDNs() works');         $test_count++;
+ok($dn -> getRFC2253String eq "baz=BAZ,foo=FOO+bar=BAR+frob=FROB",   'getRFC2253String() works'); $test_count++;
+ok($dn -> getX500String    eq "{foo=FOO+bar=BAR+frob=FROB+baz=BAZ}", 'getX500String() works');    $test_count++;
 
 $rdn        = $dn -> getRDN(0);
 $type_count = $rdn -> getAttributeTypes;

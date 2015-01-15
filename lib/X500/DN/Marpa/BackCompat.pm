@@ -33,7 +33,7 @@ sub getAttributeValue
 	my($self, $key) = @_;
 	my(@value) = @{$rdn -> get_rdn_values($key)};
 
-	return want('LIST') ? @value : scalar @value;
+	return want('LIST') ? @value : $value[0];
 
 } # End of getAttributeValue.
 
