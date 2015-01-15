@@ -1,9 +1,7 @@
 package X500::DN::Marpa;
 
 use strict;
-use utf8;
 use warnings;
-use warnings qw(FATAL utf8); # Fatalize encoding glitches.
 
 use Const::Exporter constants =>
 [
@@ -472,7 +470,10 @@ sub get_rdn_types
 
 	return $result if ( ($n < 0) || ($n > $#rdn) );
 
-	my($type) = ${$rdn[$n]}{type};
+	my($dn) = $self -> openssl_dn;
+	@rdn    = split(/\+/, $dn);
+
+	push @$result, (split(/=/, $_) )[0] for @rdn;
 
 	return $result;
 

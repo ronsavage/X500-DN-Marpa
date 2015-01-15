@@ -1,72 +1,112 @@
 package X500::DN::Marpa::BackCompat;
 
-use parent 'X500::DN::Marpa';
 use strict;
-use utf8;
 use warnings;
 use warnings qw(FATAL utf8); # Fatalize encoding glitches.
 
-use Moo;
+use X500::DN::Marpa;
 
-use Types::Standard qw/Any Int Str/;
+use Want;
 
-has x =>
-(
-	default  => sub{return ''},
-	is       => 'rw',
-	isa      => Any,
-	required => 0,
-);
+my($dn);
+my($rdn);
 
 our $VERSION = '1.00';
 
 # ------------------------------------------------
+# Tested.
+
+sub getAttributeTypes
+{
+	my($self, $n) = @_;
+	$n        = 1 if (! defined $n);
+	my(@type) = @{$rdn -> get_rdn_types($n)};
+
+	return want('LIST') ? @type : scalar @type;
+
+} # End of getAttributeTypes.
+
+# ------------------------------------------------
+
+sub getAttributeValue
+{
+	my($self, $key) = @_;
+	my(@value) = @{$rdn -> get_rdn_values($key)};
+
+	return want('LIST') ? @value : scalar @value;
+
+} # End of getAttributeValue.
+
+# ------------------------------------------------
+# Tested.
 
 sub getRFC2253String
 {
 	my($self) = @_;
 
-	return $self -> dn;
+	return $dn -> dn;
 
 } # End of getRFC2253String.
 
 # ------------------------------------------------
+# Tested.
 
 sub getRDN
 {
 	my($self, $n) = @_;
+	$rdn = X500::DN::Marpa -> new;
 
-	return $self -> get_rdn($n + 1);
+	$rdn -> parse($dn -> get_rdn($n + 1) );
+
+	return $self;
 
 } # End of getRDN.
 
 # ------------------------------------------------
+# Tested.
 
 sub getRDNs
 {
 	my($self) = @_;
 
-	return $self -> get_rdn_number;
+	return $dn -> get_rdn_number;
 
 } # End of getRDNs.
 
 # ------------------------------------------------
+# Tested.
 
 sub getX500String
 {
 	my($self) = @_;
 
-	return '{' . $self -> openssl_dn . '}';
+	return '{' . $dn -> openssl_dn . '}';
 
 } # End of getX500String.
 
 # ------------------------------------------------
+# Tested.
+
+sub new
+{
+	my($class) = @_;
+
+	$dn = X500::DN::Marpa -> new;
+
+	return bless({}, $class);
+
+} # End of new.
+
+# ------------------------------------------------
+# Tested.
 
 sub ParseRFC2253
 {
 	my($self, $text) = @_;
 
-	return $self -> parse($text);
+	$dn -> parse($text);
+
+	return $self;
 
 } # End of ParseRFC2253.
 
