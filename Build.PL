@@ -54,7 +54,6 @@ $class -> new
 		'open'            => 0,
 		'Set::Array'      => 0.30,
 		'strict'          => 0,
-		'Tree'            => 1.06,
 		'Try::Tiny'       => 0.09,
 		'Types::Standard' => 1.000004,
 		'utf8'            => 0,

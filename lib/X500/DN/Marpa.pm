@@ -4,7 +4,6 @@ use strict;
 use utf8;
 use warnings;
 use warnings qw(FATAL utf8); # Fatalize encoding glitches.
-use open     qw(:std :utf8); # Undeclared streams in UTF-8.
 
 use Const::Exporter constants =>
 [
@@ -23,8 +22,6 @@ use Marpa::R2;
 use Moo;
 
 use Set::Array;
-
-use Tree;
 
 use Types::Standard qw/Any Int Str/;
 
