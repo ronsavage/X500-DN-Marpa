@@ -17,6 +17,7 @@ my(@text)   =
 	q|x=#616263|,
 	q|foo=FOO + bar=BAR + frob=FROB, baz=BAZ|,
 	q|UID=12345, OU=Engineering, CN=Kurt Zeilenga+L=Redwood Shores|,
+	q|x=\#\"\41|,
 );
 
 my($result);
@@ -43,7 +44,7 @@ for my $text (@text)
 
 		for my $item ($parser -> stack -> print)
 		{
-			print "$$item{type} = $$item{value}. count = $$item{count}. \n";
+			print "RDN:        $$item{type}=$$item{value}. count = $$item{count}. \n";
 		}
 
 		print 'DN:         ', $parser -> dn, ". \n";

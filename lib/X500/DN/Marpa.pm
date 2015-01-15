@@ -441,25 +441,42 @@ sub get_rdn_count
 
 # ------------------------------------------------
 
-sub get_rdn_length
+sub get_rdn_number
 {
 	my($self) = @_;
 
 	return $self -> stack -> length;
 
-} # End of get_rdn_length.
+} # End of get_rdn_number.
 
 # ------------------------------------------------
 
 sub get_rdn_type
 {
 	my($self, $n) = @_;
-	$n        -= 1;
-	my(@rdn)  = $self -> stack -> print;
+	$n       -= 1;
+	my(@rdn) = $self -> stack -> print;
 
 	return ( ($n < 0) || ($n > $#rdn) ) ? '' : ${$rdn[$n]}{type};
 
 } # End of get_rdn_type.
+
+# ------------------------------------------------
+
+sub get_rdn_types
+{
+	my($self, $n) = @_;
+	$n            -= 1;
+	my(@rdn)      = $self -> stack -> print;
+	my($result)   = [];
+
+	return $result if ( ($n < 0) || ($n > $#rdn) );
+
+	my($type) = ${$rdn[$n]}{type};
+
+	return $result;
+
+} # End of get_rdn_types.
 
 # ------------------------------------------------
 
@@ -946,15 +963,15 @@ If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_count(1)> 
 
 If the input is 'foo=FOO+bar=BAR+frob=FROB, baz=BAZ', C<get_rdn_count(1)> returns 3.
 
-Not to be confused with L</get_rdn_length()>.
+Not to be confused with L</get_rdn_number()>.
 
 See t/dn.t.
 
-=head2 get_rdn_length()
+=head2 get_rdn_number()
 
 Returns the number of RDNs, which may be 0.
 
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_length()> returns 3.
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_number()> returns 3.
 
 Not to be confused with L</get_rdn_count($n)>.
 

@@ -22,11 +22,11 @@ my(@text)        =
 	[2, 1, q|cn=Nemo|, q|cn=Nemo, c=US|],
 	[2, 1, q|cn=Nemo|, q|cn = Nemo, c = US|],
 	[3, 1, q|cn=John Doe|, q|cn=John Doe, o=Acme, c=US|],
-	[3, 1, q|cn=John Doe|, q|cn=John Doe, o=Acme\\, Inc., c=US|],
-	[1, 1, q|x=\ |, q|x=\\ |],
-	[1, 1, q|x=\ |, q|x = \\ |],
-	[1, 1, q|x=\ \ |, q|x=\\ \\ |],
-	[1, 1, q|x=\#\"\41|, q|x=\\#\"\\41|],
+	[3, 1, q|cn=John Doe|, q|cn=John Doe, o=Acme\, Inc., c=US|],
+	[1, 1, q|x=\ |, q|x=\ |],
+	[1, 1, q|x=\ |, q|x = \ |],
+	[1, 1, q|x=\ \ |, q|x=\ \ |],
+	[1, 1, q|x=\#\"\41|, q|x=\#\"\41|], # Use " in comment for UltraEdit syntax hiliter.
 	[1, 1, q|x=abc|, q|x=#616263|],
 	[1, 1, q|sn=Lu\C4\8Di\C4\87|, q|SN=Lu\C4\8Di\C4\87|],			# 'Lučić'.
 	[2, 3, q|foo=FOO+bar=BAR+frob=FROB|, q|foo=FOO + bar=BAR + frob=FROB, baz=BAZ|],
@@ -40,9 +40,8 @@ my(@text)        =
 
 $parser -> options(return_hex_as_chars);
 
-my($first);
-my($get_count, $get_length, $get_rdn, $get_type, $get_value);
-my($result, $rdn_count, $rdn_length);
+my($get_count, $get_number, $get_rdn, $get_type, $get_value);
+my($result, $rdn_1, $rdn_count, $rdn_number);
 my($text, $type);
 my($value);
 
@@ -50,10 +49,10 @@ for my $item (@text)
 {
 	$test_count++;
 
-	$rdn_length     = $$item[0];
+	$rdn_number     = $$item[0];
 	$rdn_count      = $$item[1];
-	$first          = $$item[2];
-	($type, $value) = split(/=/, $first, 2);
+	$rdn_1          = $$item[2];
+	($type, $value) = split(/=/, $rdn_1, 2);
 	$type           = '' if (! defined $type);
 	$value          = '' if (! defined $value);
 	$text           = $$item[3];
@@ -71,14 +70,14 @@ for my $item (@text)
 	if ($result == 0)
 	{
 		$get_count  = $parser -> get_rdn_count(1);
-		$get_length = $parser -> get_rdn_length;
+		$get_number = $parser -> get_rdn_number;
 		$get_rdn    = $parser -> get_rdn(1);
 		$get_type   = $parser -> get_rdn_type(1)  || '';
 		$get_value  = $parser -> get_rdn_value(1) || '';
 
 		ok($rdn_count  == $get_count,  'get_rdn_count(1) works'); $test_count++;
-		ok($rdn_length == $get_length, 'get_rdn_length() works'); $test_count++;
-		ok($first      eq $get_rdn,    'get_rdn(1) works');       $test_count++;
+		ok($rdn_number == $get_number, 'get_rdn_number() works'); $test_count++;
+		ok($rdn_1      eq $get_rdn,    'get_rdn(1) works');       $test_count++;
 		ok($type       eq $get_type,   'get_rdn_type(1) works');  $test_count++;
 		ok($value      eq $get_value,  'get_rdn_value(1) works'); $test_count++;
 	}

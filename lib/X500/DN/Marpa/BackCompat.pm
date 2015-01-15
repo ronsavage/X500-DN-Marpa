@@ -36,6 +36,8 @@ sub getRDN
 {
 	my($self, $n) = @_;
 
+	return $self -> get_rdn($n + 1);
+
 } # End of getRDN.
 
 # ------------------------------------------------
@@ -44,7 +46,7 @@ sub getRDNs
 {
 	my($self) = @_;
 
-	return $self -> get_rdn_length;
+	return $self -> get_rdn_number;
 
 } # End of getRDNs.
 
