@@ -32,7 +32,7 @@ my(%params) =
 		'Const::Exporter' => 'v0.2.3',
 		'Marpa::R2'       => 2.096000,
 		'Moo'             => 1.006000,
-		'open'            => 0,
+		'parent'          => 0,
 		'Set::Array'      => 0.30,
 		'strict'          => 0,
 		'Test::More'      => 1.001006,
@@ -40,10 +40,10 @@ my(%params) =
 		'Try::Tiny'       => 0.09,
 		'Types::Standard' => 1.000004,
 		'utf8'            => 0,
+		'Want'            => 0.25,
 		'warnings'        => 0,
 	},
-	VERSION_FROM => 'lib/X500/DN		'Set::Array'      => 0.30,
-/Marpa.pm',
+	VERSION_FROM => 'lib/X500/DN/Marpa.pm',
 );
 
 if ( ($ExtUtils::MakeMaker::VERSION =~ /^\d\.\d\d$/) && ($ExtUtils::MakeMaker::VERSION > 6.30) )
