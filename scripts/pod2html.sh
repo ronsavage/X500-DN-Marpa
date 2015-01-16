@@ -2,10 +2,13 @@
 
 DIR1=Perl-modules/html
 DIR2=X500/DN
-FILE=$DIR1/$DIR2/Marpa.html
+DIRS=$DIR1/$DIR2
 
-pod2html.pl -i lib/X500/DN/Marpa.pm -o $DR/$FILE
+mkdir -p ~/savage.net.au/$DIRS/Marpa
+mkdir -p $DR/$DIRS/Marpa
 
-mkdir -p ~/savage.net.au/$DIR1/$DIR2
+pod2html.pl -i lib/X500/DN/Marpa.pm     -o $DR/$DIRS/Marpa.pm
+pod2html.pl -i lib/X500/DN/Marpa/DN.pm  -o $DR/$DIRS/Marpa/DN.pm
+pod2html.pl -i lib/X500/DN/Marpa/RDN.pm -o $DR/$DIRS/Marpa/RDN.pm
 
-cp $DR/$FILE ~/savage.net.au/$FILE
+cp -r $DR/$DIRS/* ~/savage.net.au/$DIRS
