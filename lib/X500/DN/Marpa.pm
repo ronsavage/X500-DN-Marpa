@@ -821,6 +821,9 @@ If you set the option C<return_hex_as_chars>, as discussed in the L</FAQ>, then 
 
 C<X500::DN::Marpa> provides a L<Marpa::R2>-based parser for parsing X.500 Distinguished Names.
 
+It is based on L<RFC4514|https://www.ietf.org/rfc/rfc4514.txt>:
+Lightweight Directory Access Protocol (LDAP): String Representation of Distinguished Names.
+
 =head1 Distributions
 
 This module is available as a Unix-style distro (*.tgz).
