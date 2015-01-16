@@ -683,13 +683,13 @@ sub rdn_value
 
 sub rdn_values
 {
-	my($self, $key) = @_;
+	my($self, $type) = @_;
 
 	my(@result);
 
 	for my $rdn ($self -> stack -> print)
 	{
-		push @result, $$rdn{value} if (lc $$rdn{type} eq lc $key);
+		push @result, $$rdn{value} if (lc $$rdn{type} eq lc $type);
 	}
 
 	return @result;

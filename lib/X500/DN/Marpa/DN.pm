@@ -186,7 +186,7 @@ Notes:
 
 =item o C<X500::DN>
 
-That module was based on the obsolete L<RFC2253|https://www.ietf.org/rfc/rfc2253.txt>:
+This module was based on the obsolete L<RFC2253|https://www.ietf.org/rfc/rfc2253.txt>:
 Lightweight Directory Access Protocol (v3): UTF-8 String Representation of Distinguished Names.
 
 =item o C<X500::DN::Marpa> and C<X500::DN::Marpa::DN>
@@ -248,7 +248,7 @@ Key-value pairs accepted in the parameter list (see corresponding methods for de
 =head1 Methods
 
 This module is a subclass of L<X500::DN::Marpa> and shares all its options to new(), and all its
-methods(). See L<X500::DN::Marpa/Constructor and Initialization> and L<X500::DN::Marpa/Methods>.
+methods. See L<X500::DN::Marpa/Constructor and Initialization> and L<X500::DN::Marpa/Methods>.
 
 Further, it has these methods:
 
@@ -270,8 +270,8 @@ $n counts from 0.
 The returned object has already parsed the RDN, so you use that object via the methods documented in
 L<X500::DN::Marpa::RDN>.
 
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn(0)> returns
-'uid=nobody@example.com'. Note the lower-case 'uid'.
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn(0)> returns an object which has
+parsed 'uid=nobody@example.com'. Note the lower-case 'uid'.
 
 Warning: The parent class L<X500::DN::Marpa> counts RDNs from 1.
 
@@ -345,8 +345,10 @@ You can think of scripts/dn.pl as scripts/forward.compat.pl!
 
 =head2 How do you handle attribute values in double-quotes?
 
-I ignore the quotes, because I assume none of your other software accepts them anyway, so you're
-not doing that any more.
+RFC4514 does not discuss this topic.
+
+So, I ignore the quotes, because I assume none of your other software accepts them anyway, since
+you're not using them any more, right?
 
 =head1 References
 
