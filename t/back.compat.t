@@ -11,7 +11,7 @@ use X500::DN::Marpa::RDN;
 # -----------------------
 
 my($test_count) = 0;
-my($dn)         = X500::DN::Marpa::DN-> new;
+my($dn)         = X500::DN::Marpa::DN -> new;
 
 isa_ok($dn, 'X500::DN::Marpa::DN', '$dn'); $test_count++;
 

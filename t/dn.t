@@ -98,8 +98,8 @@ $text   = 'UID=nobody@example.com,DC=example,DC=com';
 $result = $parser -> parse($text);
 @rdn    = @{$parser -> get_rdn_values('DC')};
 
-ok($rdn[0] eq 'example', "get_rdn_values('DC') works"); $test_count++;
-ok($rdn[1] eq 'com',     "get_rdn_values('DC') works"); $test_count++;
+ok($rdn[0] eq 'example', 'get_rdn_values(DC) works'); $test_count++;
+ok($rdn[1] eq 'com',     'get_rdn_values(DC) works'); $test_count++;
 
 print "# Internal test count: $test_count\n";
 
