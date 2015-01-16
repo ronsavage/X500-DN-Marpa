@@ -96,7 +96,7 @@ sub ParseRFC2253
 
 =head1 NAME
 
-C<X500::DN::Marpa::DN> - Backcompat module to emulate DN part of C<X500::DN>
+C<X500::DN::Marpa::DN> - Backcompat module to emulate the DN part of C<X500::DN>
 
 =head1 Synopsis
 
@@ -195,6 +195,8 @@ These modules are based on L<RFC4514|https://www.ietf.org/rfc/rfc4514.txt>:
 Lightweight Directory Access Protocol (LDAP): String Representation of Distinguished Names.
 
 =back
+
+See also L<X500::DN::Marpa> and L<X500::DN::Marpa::RDN>.
 
 =head1 Distributions
 
@@ -340,6 +342,11 @@ See scripts/back.compat.pl.
 See scripts/dn.pl.
 
 You can think of scripts/dn.pl as scripts/forward.compat.pl!
+
+=head2 How do you handle attribute values in double-quotes?
+
+I ignore the quotes, because I assume none of your other software accepts them anyway, so you're
+not doing that any more.
 
 =head1 References
 

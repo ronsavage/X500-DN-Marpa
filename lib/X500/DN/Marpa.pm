@@ -643,18 +643,19 @@ sub rdn_type
 sub rdn_types
 {
 	my($self, $n) = @_;
-	$n            -= 1;
-	my(@rdn)      = $self -> stack -> print;
-	my($result)   = [];
+	$n       -= 1;
+	my(@rdn) = $self -> stack -> print;
 
-	return $result if ( ($n < 0) || ($n > $#rdn) );
+	my(@result);
+
+	return @result if ( ($n < 0) || ($n > $#rdn) );
 
 	my($dn) = $self -> openssl_dn;
 	@rdn    = split(/\+/, $dn);
 
-	push @$result, (split(/=/, $_) )[0] for @rdn;
+	push @result, (split(/=/, $_) )[0] for @rdn;
 
-	return $result;
+	return @result;
 
 } # End of rdn_types.
 
@@ -663,9 +664,9 @@ sub rdn_types
 sub rdn_value
 {
 	my($self, $n) = @_;
-	$n          -= 1;
-	my(@rdn)    = $self -> stack -> print;
-	my($result) = '';
+	$n            -= 1;
+	my(@rdn)      = $self -> stack -> print;
+	my($result)   = '';
 
 	if ( ($n >= 0) && ($n <= $#rdn) )
 	{
@@ -683,14 +684,15 @@ sub rdn_value
 sub rdn_values
 {
 	my($self, $key) = @_;
-	my($result) = [];
+
+	my(@result);
 
 	for my $rdn ($self -> stack -> print)
 	{
-		push @$result, $$rdn{value} if (lc $$rdn{type} eq lc $key);
+		push @result, $$rdn{value} if (lc $$rdn{type} eq lc $key);
 	}
 
-	return $result;
+	return @result;
 
 } # End of rdn_values.
 
@@ -1037,6 +1039,17 @@ If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn_type(1)> retur
 
 See t/dn.t.
 
+=head2 rdn_types($n)
+
+Returns an array containing all the types of all the RDNs for the given RDN, or returns () if $n is
+out of range.
+
+$n counts from 1.
+
+If the DN is 'foo=FOO+bar=BAR+frob=FROB, baz=BAZ', C<rdn_types(1)> returns ('foo', 'bar', frob').
+
+See t/dn.t.
+
 =head2 rdn_value($n)
 
 Returns a string containing the $n-th RDN's attribute value, or returns '' if $n is out of
@@ -1051,10 +1064,10 @@ See t/dn.t.
 
 =head2 rdn_values($type)
 
-Returns an arrayref containing the RDN attribute values for the attribute type $type, or [].
+Returns an array containing the RDN attribute values for the attribute type $type, or ().
 
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn_type('DC')> returns
-['example', 'com'].
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn_values('DC')> returns
+('example', 'com').
 
 See t/dn.t.
 

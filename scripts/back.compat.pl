@@ -39,7 +39,7 @@ my($has_multi) = $dn -> hasMultivaluedRDNs;
 
 print "hasMulti:    $has_multi (Expected: 1)\n";
 print '-' x 50, "\n";
-print "Part 2:\n";
+print "Part 3:\n";
 
 $rdn = $dn -> getRDN(1);
 

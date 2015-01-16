@@ -87,16 +87,19 @@ $text    = 'CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US';
 $result  = $parser -> parse($text);
 my(@rdn) = split(/,/, $text);
 
+my(@values);
+
 for my $rdn (@rdn)
 {
 	($type, $value) = split(/=/, $rdn);
+	@values         = $parser -> rdn_values($type);
 
-	ok($value eq ${$parser -> rdn_values($type)}[0], "rdn_value($type) works"); $test_count++;
+	ok($value eq $values[0], "rdn_value($type) works"); $test_count++;
 }
 
 $text   = 'UID=nobody@example.com,DC=example,DC=com';
 $result = $parser -> parse($text);
-@rdn    = @{$parser -> rdn_values('DC')};
+@rdn    = $parser -> rdn_values('DC');
 
 ok($rdn[0] eq 'example', 'rdn_values(DC) works'); $test_count++;
 ok($rdn[1] eq 'com',     'rdn_values(DC) works'); $test_count++;
