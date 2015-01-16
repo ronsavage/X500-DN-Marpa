@@ -650,10 +650,13 @@ sub rdn_types
 
 	return @result if ( ($n < 0) || ($n > $#rdn) );
 
-	my($dn) = $self -> openssl_dn;
-	@rdn    = split(/\+/, $dn);
+	my(@bits)  = split(/\+/, "${$rdn[$n]}{type}=${$rdn[$n]}{value}");
+	my(@parts) = map{split(/=/, $_)} @bits;
 
-	push @result, (split(/=/, $_) )[0] for @rdn;
+	for my $i (0 .. $#parts)
+	{
+		push @result, $parts[$i] if ( ($i % 2) == 0);
+	}
 
 	return @result;
 
