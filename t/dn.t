@@ -69,17 +69,17 @@ for my $item (@text)
 
 	if ($result == 0)
 	{
-		$get_count  = $parser -> get_rdn_count(1);
-		$get_number = $parser -> get_rdn_number;
-		$get_rdn    = $parser -> get_rdn(1);
-		$get_type   = $parser -> get_rdn_type(1)  || '';
-		$get_value  = $parser -> get_rdn_value(1) || '';
+		$get_count  = $parser -> rdn_count(1);
+		$get_number = $parser -> rdn_number;
+		$get_rdn    = $parser -> rdn(1);
+		$get_type   = $parser -> rdn_type(1)  || '';
+		$get_value  = $parser -> rdn_value(1) || '';
 
-		ok($rdn_count  == $get_count,  'get_rdn_count(1) works'); $test_count++;
-		ok($rdn_number == $get_number, 'get_rdn_number() works'); $test_count++;
-		ok($rdn_1      eq $get_rdn,    'get_rdn(1) works');       $test_count++;
-		ok($type       eq $get_type,   'get_rdn_type(1) works');  $test_count++;
-		ok($value      eq $get_value,  'get_rdn_value(1) works'); $test_count++;
+		ok($rdn_count  == $get_count,  'rdn_count(1) works'); $test_count++;
+		ok($rdn_number == $get_number, 'rdn_number() works'); $test_count++;
+		ok($rdn_1      eq $get_rdn,    'rdn(1) works');       $test_count++;
+		ok($type       eq $get_type,   'rdn_type(1) works');  $test_count++;
+		ok($value      eq $get_value,  'rdn_value(1) works'); $test_count++;
 	}
 }
 
@@ -91,15 +91,15 @@ for my $rdn (@rdn)
 {
 	($type, $value) = split(/=/, $rdn);
 
-	ok($value eq ${$parser -> get_rdn_values($type)}[0], "get_rdn_value($type) works"); $test_count++;
+	ok($value eq ${$parser -> rdn_values($type)}[0], "rdn_value($type) works"); $test_count++;
 }
 
 $text   = 'UID=nobody@example.com,DC=example,DC=com';
 $result = $parser -> parse($text);
-@rdn    = @{$parser -> get_rdn_values('DC')};
+@rdn    = @{$parser -> rdn_values('DC')};
 
-ok($rdn[0] eq 'example', 'get_rdn_values(DC) works'); $test_count++;
-ok($rdn[1] eq 'com',     'get_rdn_values(DC) works'); $test_count++;
+ok($rdn[0] eq 'example', 'rdn_values(DC) works'); $test_count++;
+ok($rdn[1] eq 'com',     'rdn_values(DC) works'); $test_count++;
 
 print "# Internal test count: $test_count\n";
 

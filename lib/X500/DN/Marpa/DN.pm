@@ -28,7 +28,7 @@ sub getRDN
 	my($self, $n) = @_;
 	my($rdn)      = X500::DN::Marpa::RDN -> new;
 
-	$rdn -> parse($self -> get_rdn($n + 1) );
+	$rdn -> parse($self -> rdn($n + 1) );
 
 	return $rdn;
 
@@ -40,7 +40,7 @@ sub getRDNs
 {
 	my($self) = @_;
 
-	return $self -> get_rdn_number;
+	return $self -> rdn_number;
 
 } # End of getRDNs.
 
@@ -92,82 +92,83 @@ sub ParseRFC2253
 
 =head1 NAME
 
-C<X500::DN::Marpa::DN> - Emulate DN part of X.500::DN
+C<X500::DN::Marpa::DN> - Backcompat module to emulate DN part of X500::DN
 
 =head1 Synopsis
+
+This is scripts/back.compat.pl:
 
 	#!/usr/bin/env perl
 
 	use strict;
 	use warnings;
 
-	use X500::DN::Marpa ':constants';
+	use X500::DN::Marpa::DN;
+	use X500::DN::Marpa::RDN;
 
-	# -----------
+	# -----------------------
 
-	my(%count)  = (fail => 0, success => 0, total => 0);
-	my($parser) = X500::DN::Marpa -> new
-	(
-		options => long_descriptors,
-	);
-	my(@text) =
-	(
-		q||,
-		q|1.4.9=2001|,
-		q|cn=Nemo,c=US|,
-		q|cn=Nemo, c=US|,
-		q|cn = Nemo, c = US|,
-		q|cn=John Doe, o=Acme, c=US|,
-		q|cn=John Doe, o=Acme\\, Inc., c=US|,
-		q|x= |,
-		q|x=\\ |,
-		q|x = \\ |,
-		q|x=\\ \\ |,
-		q|x=\\#\"\\41|,
-		q|x=#616263|,
-		q|SN=Lu\C4\8Di\C4\87|,		# 'Lučić'.
-		q|foo=FOO + bar=BAR + frob=FROB, baz=BAZ|,
-		q|UID=jsmith,DC=example,DC=net|,
-		q|OU=Sales+CN=J.  Smith,DC=example,DC=net|,
-		q|CN=James \"Jim\" Smith\, III,DC=example,DC=net|,
-		q|CN=Before\0dAfter,DC=example,DC=net|,
-		q|1.3.6.1.4.1.1466.0=#04024869|,
-		q|UID=nobody@example.com,DC=example,DC=com|,
-		q|CN=John Smith,OU=Sales,O=ACME Limited,L=Moab,ST=Utah,C=US|,
-	);
+	print "Part 1:\n";
 
-	my($result);
+	my($dn)   = X500::DN::Marpa::DN -> new;
+	my($text) = 'foo=FOO + bar=BAR + frob=FROB, baz=BAZ';
 
-	for my $text (@text)
-	{
-		$count{total}++;
+	$dn -> ParseRFC2253($text);
 
-		print "# $count{total}. Parsing |$text|. \n";
+	print "Parsing:     $text\n";
+	print 'RDN count:   ', $dn -> getRDNs, " (Expected: 2)\n";
+	print 'DN:          ', $dn -> getRFC2253String, " (Expected: baz=BAZ,foo=FOO+bar=BAR+frob=FROB)\n";
+	print 'X500 string: ', $dn -> getX500String, " (Expected: {foo=FOO+bar=BAR+frob=FROB+baz=BAZ})\n";
+	print '-' x 50, "\n";
+	print "Part 2:\n";
 
-		$result = $parser -> parse($text);
+	my($rdn)       = $dn -> getRDN(0);
+	my $type_count = $rdn -> getAttributeTypes;
+	my(@types)     = $rdn -> getAttributeTypes;
 
-		print "Parse result: $result (0 is success)\n";
+	print 'RDN(0):      ', $rdn -> dn, "\n";
+	print "Type count:  $type_count (Expected: 3)\n";
+	print "Type [0]:    $types[0] (Expected: foo)\n";
+	print "Type [1]:    $types[1] (Expected: bar)\n";
 
-		if ($result == 0)
-		{
-			$count{success}++;
+	my(@values) = $rdn -> getAttributeValue('foo');
 
-			for my $item ($parser -> stack -> print)
-			{
-				print "$$item{type} = $$item{value}. count = $$item{count}. \n";
-			}
+	print "Value [0]:   $values[0] (Expected: FOO+bar=BAR+frob=FROB)\n";
 
-			print 'DN:         ', $parser -> dn, ". \n";
-			print 'OpenSSL DN: ', $parser -> openssl_dn, ". \n";
-		}
+	my($has_multi) = $dn -> hasMultivaluedRDNs;
 
-		print '-' x 50, "\n";
-	}
+	print "hasMulti:    $has_multi (Expected: 1)\n";
+	print '-' x 50, "\n";
+	print "Part 2:\n";
 
-	$count{fail} = $count{total} - $count{success};
+	$rdn = $dn -> getRDN(1);
 
-	print "\n";
-	print 'Statistics: ', join(', ', map{"$_ => $count{$_}"} sort keys %count), ". \n";
+	@values = $rdn -> getAttributeValue('baz');
+
+	print 'RDN(1):      ', $rdn -> dn, "\n";
+	print "Value [0]:   $values[0] (Expected: BAZ)\n";
+	print '-' x 50, "\n";
+
+Output of scripts/back.compat.pl:
+
+	Part 1:
+	Parsing:     foo=FOO + bar=BAR + frob=FROB, baz=BAZ
+	RDN count:   2 (Expected: 2)
+	DN:          baz=BAZ,foo=FOO+bar=BAR+frob=FROB (Expected: baz=BAZ,foo=FOO+bar=BAR+frob=FROB)
+	X500 string: {foo=FOO+bar=BAR+frob=FROB+baz=BAZ} (Expected: {foo=FOO+bar=BAR+frob=FROB+baz=BAZ})
+	--------------------------------------------------
+	Part 2:
+	RDN(0):      foo=FOO+bar=BAR+frob=FROB
+	Type count:  3 (Expected: 3)
+	Type [0]:    foo (Expected: foo)
+	Type [1]:    bar (Expected: bar)
+	Value [0]:   FOO+bar=BAR+frob=FROB (Expected: FOO+bar=BAR+frob=FROB)
+	hasMulti:    1 (Expected: 1)
+	--------------------------------------------------
+	Part 2:
+	RDN(1):      baz=BAZ
+	Value [0]:   BAZ (Expected: BAZ)
+	--------------------------------------------------
 
 See scripts/synopsis.pl.
 
@@ -330,6 +331,16 @@ You can set the option C<ambiguity_is_fatal> to make it fatal.
 
 See L</error_message()>.
 
+=head2 get_openssl_dn()
+
+Returns the RDNs, separated by pluses, as a single string in the same order compared with the
+order of the RNDs in the input text.
+
+Hence 'cn=Nemo, c=US' is returned as 'commonName=Nemo+countryName=US' (when the
+C<long_descriptors> option is used), and as 'cn=Nemo+c=US' by default.
+
+See also L</dn()>.
+
 =head2 get_rdn($n)
 
 Returns a string containing the $n-th RDN, or returns '' if $n is out of range.
@@ -400,16 +411,6 @@ See t/dn.t.
 =head2 new()
 
 See L</Constructor and Initialization> for details on the parameters accepted by L</new()>.
-
-=head2 openssl_dn()
-
-Returns the RDNs, separated by pluses, as a single string in the same order compared with the
-order of the RNDs in the input text.
-
-Hence 'cn=Nemo, c=US' is returned as 'commonName=Nemo+countryName=US' (when the
-C<long_descriptors> option is used), and as 'cn=Nemo+c=US' by default.
-
-See also L</dn()>.
 
 =head2 options([$bit_string])
 

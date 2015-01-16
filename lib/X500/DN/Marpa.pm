@@ -415,108 +415,6 @@ sub dn
 
 # ------------------------------------------------
 
-sub get_rdn
-{
-	my($self, $n) = @_;
-	$n        -= 1;
-	my(@rdn)  = $self -> stack -> print;
-
-	return ( ($n < 0) || ($n > $#rdn) ) ? '' : "${$rdn[$n]}{type}=${$rdn[$n]}{value}";
-
-} # End of get_rdn.
-
-# ------------------------------------------------
-
-sub get_rdn_count
-{
-	my($self, $n) = @_;
-	$n        -= 1;
-	my(@rdn)  = $self -> stack -> print;
-
-	return ( ($n < 0) || ($n > $#rdn) ) ? 0 : ${$rdn[$n]}{count};
-
-} # End of get_rdn_count.
-
-# ------------------------------------------------
-
-sub get_rdn_number
-{
-	my($self) = @_;
-
-	return $self -> stack -> length;
-
-} # End of get_rdn_number.
-
-# ------------------------------------------------
-
-sub get_rdn_type
-{
-	my($self, $n) = @_;
-	$n       -= 1;
-	my(@rdn) = $self -> stack -> print;
-
-	return ( ($n < 0) || ($n > $#rdn) ) ? '' : ${$rdn[$n]}{type};
-
-} # End of get_rdn_type.
-
-# ------------------------------------------------
-
-sub get_rdn_types
-{
-	my($self, $n) = @_;
-	$n            -= 1;
-	my(@rdn)      = $self -> stack -> print;
-	my($result)   = [];
-
-	return $result if ( ($n < 0) || ($n > $#rdn) );
-
-	my($dn) = $self -> openssl_dn;
-	@rdn    = split(/\+/, $dn);
-
-	push @$result, (split(/=/, $_) )[0] for @rdn;
-
-	return $result;
-
-} # End of get_rdn_types.
-
-# ------------------------------------------------
-
-sub get_rdn_value
-{
-	my($self, $n) = @_;
-	$n          -= 1;
-	my(@rdn)    = $self -> stack -> print;
-	my($result) = '';
-
-	if ( ($n >= 0) && ($n <= $#rdn) )
-	{
-		# This returns '' for an RDN of 'x='. See *::Actions.attribute_value().
-
-		$result = ${$rdn[$n]}{value};
-	}
-
-	return $result;
-
-} # End of get_rdn_value.
-
-# ------------------------------------------------
-
-sub get_rdn_values
-{
-	my($self, $key) = @_;
-	my($result) = [];
-
-	for my $rdn ($self -> stack -> print)
-	{
-		push @$result, $$rdn{value} if (lc $$rdn{type} eq lc $key);
-	}
-
-	return $result;
-
-} # End of get_rdn_values.
-
-# ------------------------------------------------
-
 sub openssl_dn
 {
 	my($self) = @_;
@@ -693,6 +591,108 @@ sub parse
 	return $result;
 
 } # End of parse.
+
+# ------------------------------------------------
+
+sub rdn
+{
+	my($self, $n) = @_;
+	$n        -= 1;
+	my(@rdn)  = $self -> stack -> print;
+
+	return ( ($n < 0) || ($n > $#rdn) ) ? '' : "${$rdn[$n]}{type}=${$rdn[$n]}{value}";
+
+} # End of rdn.
+
+# ------------------------------------------------
+
+sub rdn_count
+{
+	my($self, $n) = @_;
+	$n        -= 1;
+	my(@rdn)  = $self -> stack -> print;
+
+	return ( ($n < 0) || ($n > $#rdn) ) ? 0 : ${$rdn[$n]}{count};
+
+} # End of rdn_count.
+
+# ------------------------------------------------
+
+sub rdn_number
+{
+	my($self) = @_;
+
+	return $self -> stack -> length;
+
+} # End of rdn_number.
+
+# ------------------------------------------------
+
+sub rdn_type
+{
+	my($self, $n) = @_;
+	$n       -= 1;
+	my(@rdn) = $self -> stack -> print;
+
+	return ( ($n < 0) || ($n > $#rdn) ) ? '' : ${$rdn[$n]}{type};
+
+} # End of rdn_type.
+
+# ------------------------------------------------
+
+sub rdn_types
+{
+	my($self, $n) = @_;
+	$n            -= 1;
+	my(@rdn)      = $self -> stack -> print;
+	my($result)   = [];
+
+	return $result if ( ($n < 0) || ($n > $#rdn) );
+
+	my($dn) = $self -> openssl_dn;
+	@rdn    = split(/\+/, $dn);
+
+	push @$result, (split(/=/, $_) )[0] for @rdn;
+
+	return $result;
+
+} # End of rdn_types.
+
+# ------------------------------------------------
+
+sub rdn_value
+{
+	my($self, $n) = @_;
+	$n          -= 1;
+	my(@rdn)    = $self -> stack -> print;
+	my($result) = '';
+
+	if ( ($n >= 0) && ($n <= $#rdn) )
+	{
+		# This returns '' for an RDN of 'x='. See *::Actions.attribute_value().
+
+		$result = ${$rdn[$n]}{value};
+	}
+
+	return $result;
+
+} # End of rdn_value.
+
+# ------------------------------------------------
+
+sub rdn_values
+{
+	my($self, $key) = @_;
+	my($result) = [];
+
+	for my $rdn ($self -> stack -> print)
+	{
+		push @$result, $$rdn{value} if (lc $$rdn{type} eq lc $key);
+	}
+
+	return $result;
+
+} # End of rdn_values.
 
 # ------------------------------------------------
 
@@ -942,73 +942,6 @@ You can set the option C<ambiguity_is_fatal> to make it fatal.
 
 See L</error_message()>.
 
-=head2 get_rdn($n)
-
-Returns a string containing the $n-th RDN, or returns '' if $n is out of range.
-
-$n counts from 1.
-
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn(1)> returns
-'uid=nobody@example.com'. Note the lower-case 'uid'.
-
-See t/dn.t.
-
-=head2 get_rdn_count($n)
-
-Returns a string containing the $n-th RDN's count (multivalue indicator), or returns 0 if $n is out
-of range.
-
-$n counts from 1.
-
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_count(1)> returns 1.
-
-If the input is 'foo=FOO+bar=BAR+frob=FROB, baz=BAZ', C<get_rdn_count(1)> returns 3.
-
-Not to be confused with L</get_rdn_number()>.
-
-See t/dn.t.
-
-=head2 get_rdn_number()
-
-Returns the number of RDNs, which may be 0.
-
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_number()> returns 3.
-
-Not to be confused with L</get_rdn_count($n)>.
-
-See t/dn.t.
-
-=head2 get_rdn_type($n)
-
-Returns a string containing the $n-th RDN's attribute type, or returns '' if $n is out of range.
-
-$n counts from 1.
-
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type(1)> returns 'uid'.
-
-See t/dn.t.
-
-=head2 get_rdn_value($n)
-
-Returns a string containing the $n-th RDN's attribute value, or returns '' if $n is out of
-range.
-
-$n counts from 1.
-
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type(1)> returns
-'nobody@example.com'.
-
-See t/dn.t.
-
-=head2 get_rdn_values($type)
-
-Returns an arrayref containing the RDN attribute values for the attribute type $type, or [].
-
-If the input is 'UID=nobody@example.com,DC=example,DC=com', C<get_rdn_type('DC')> returns
-['example', 'com'].
-
-See t/dn.t.
-
 =head2 new()
 
 See L</Constructor and Initialization> for details on the parameters accepted by L</new()>.
@@ -1054,6 +987,73 @@ See scripts/synopsis.pl.
 Returns 0 for success and 1 for failure.
 
 If the value is 1, you should call L</error_number()> to find out what happened.
+
+=head2 rdn($n)
+
+Returns a string containing the $n-th RDN, or returns '' if $n is out of range.
+
+$n counts from 1.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn(1)> returns
+'uid=nobody@example.com'. Note the lower-case 'uid'.
+
+See t/dn.t.
+
+=head2 rdn_count($n)
+
+Returns a string containing the $n-th RDN's count (multivalue indicator), or returns 0 if $n is out
+of range.
+
+$n counts from 1.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn_count(1)> returns 1.
+
+If the input is 'foo=FOO+bar=BAR+frob=FROB, baz=BAZ', C<rdn_count(1)> returns 3.
+
+Not to be confused with L</rdn_number()>.
+
+See t/dn.t.
+
+=head2 rdn_number()
+
+Returns the number of RDNs, which may be 0.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn_number()> returns 3.
+
+Not to be confused with L</rdn_count($n)>.
+
+See t/dn.t.
+
+=head2 rdn_type($n)
+
+Returns a string containing the $n-th RDN's attribute type, or returns '' if $n is out of range.
+
+$n counts from 1.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn_type(1)> returns 'uid'.
+
+See t/dn.t.
+
+=head2 rdn_value($n)
+
+Returns a string containing the $n-th RDN's attribute value, or returns '' if $n is out of
+range.
+
+$n counts from 1.
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn_type(1)> returns
+'nobody@example.com'.
+
+See t/dn.t.
+
+=head2 rdn_values($type)
+
+Returns an arrayref containing the RDN attribute values for the attribute type $type, or [].
+
+If the input is 'UID=nobody@example.com,DC=example,DC=com', C<rdn_type('DC')> returns
+['example', 'com'].
+
+See t/dn.t.
 
 =head2 stack()
 

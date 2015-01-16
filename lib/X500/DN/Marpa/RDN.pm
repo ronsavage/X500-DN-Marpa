@@ -17,7 +17,7 @@ sub getAttributeTypes
 {
 	my($self, $n) = @_;
 	$n        = 1 if (! defined $n);
-	my(@type) = @{$self -> get_rdn_types($n)};
+	my(@type) = @{$self -> rdn_types($n)};
 
 	return want('LIST') ? @type : scalar @type;
 
@@ -28,7 +28,7 @@ sub getAttributeTypes
 sub getAttributeValue
 {
 	my($self, $key) = @_;
-	my(@value) = @{$self -> get_rdn_values($key)};
+	my(@value) = @{$self -> rdn_values($key)};
 
 	return want('LIST') ? @value : $value[0];
 
