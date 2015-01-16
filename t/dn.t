@@ -40,10 +40,10 @@ my(@text)        =
 
 $parser -> options(return_hex_as_chars);
 
-my($get_count, $get_number, $get_rdn, $get_type, $get_value, $get_openssl_dn);
+my($get_count, $get_number, $get_rdn, $get_type, @get_types, $get_value, $get_openssl_dn);
 my($openssl_dn);
 my($result, $rdn_1, $rdn_count, $rdn_number);
-my($text, $type);
+my($text, $type, @types);
 my($value);
 
 for my $item (@text)
@@ -75,6 +75,7 @@ for my $item (@text)
 		$get_number     = $parser -> rdn_number;
 		$get_rdn        = $parser -> rdn(1);
 		$get_type       = $parser -> rdn_type(1);
+		@get_types      = $parser -> rdn_types(1);
 		$get_value      = $parser -> rdn_value(1);
 		$get_openssl_dn = $parser -> openssl_dn;
 
@@ -82,6 +83,7 @@ for my $item (@text)
 		ok($rdn_number == $get_number,     'rdn_number() works'); $test_count++;
 		ok($rdn_1      eq $get_rdn,        'rdn(1) works');       $test_count++;
 		ok($type       eq $get_type,       'rdn_type(1) works');  $test_count++;
+		diag "\t<", join('> <', @get_types), '>';
 		ok($value      eq $get_value,      'rdn_value(1) works'); $test_count++;
 		ok($openssl_dn eq $get_openssl_dn, 'openssl_dn() works'); $test_count++;
 	}
