@@ -5,6 +5,8 @@ use utf8;
 use warnings;
 use warnings qw(FATAL utf8); # Fatalize encoding glitches.
 
+our $VERSION = '0.81';
+
 # ------------------------------------------------
 
 sub attribute_type
