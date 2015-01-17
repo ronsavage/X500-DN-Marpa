@@ -1,4 +1,8 @@
 Revision history for Perl extension X500::DN::Marpa.
 
+0.81  2015-01-18T10:19:00
+	- Add docs for X500::DN::Marpa::Actions.
+	- Update scripts/pod2html.sh to match.
+
 0.80  2015-01-13T17:59:00
 	- Original version
