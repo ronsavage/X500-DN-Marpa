@@ -309,8 +309,6 @@ for my $item (@text)
 		ok($types      eq $get_types,      'rdn_types(1) works');  $test_count++;
 		ok($value      eq $get_value,      'rdn_value(1) works');  $test_count++;
 		ok($values     eq $get_values,     'rdn_values(x) works'); $test_count++;
-
-		diag "values($temp[0]): <$values> <$get_values>";
 	}
 }
 
