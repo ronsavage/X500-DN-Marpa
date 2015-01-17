@@ -339,9 +339,9 @@ See scripts/back.compat.pl.
 
 =head2 How do I upgrade code from C<X500::DN> to C<X500::DN::Marpa>?
 
-See scripts/dn.pl.
+See scripts/synopsis.pl.
 
-You can think of scripts/dn.pl as scripts/forward.compat.pl!
+You can think of scripts/synopsis.pl as scripts/forward.compat.pl!
 
 =head2 How do you handle attribute values in double-quotes?
 
