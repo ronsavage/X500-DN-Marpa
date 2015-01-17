@@ -1,4 +1,4 @@
-README file for Text::Balanced::Marpa.
+README file for X500::DN::Marpa.
 
 See also: Changes and Changelog.ini.
 
@@ -9,8 +9,8 @@ ftp://ftp.info-zip.org/pub/infozip/
 
 1 Installing from a Unix-like distro
 ------------------------------------
-shell>gunzip Text-Balanced-Marpa-1.00.tgz
-shell>tar mxvf Text-Balanced-Marpa-1.00.tar
+shell>gunzip X500-DN-Marpa-1.00.tgz
+shell>tar mxvf X500-DN-Marpa-1.00.tar
 
 On Unix-like systems, assuming you have installed Module::Build V 0.25+:
 
@@ -43,7 +43,7 @@ Run Marpa.pm through your favourite pod2html translator.
 
 2 Installing from an ActiveState distro
 ---------------------------------------
-shell>unzip Text-Balanced-Marpa-1.00.zip
-shell>ppm install --location=. Text-Balanced-Marpa
-shell>del Text-Balanced-Marpa-1.00.ppd
-shell>del PPM-Text-Balanced-Marpa-1.00.tar.gz
+shell>unzip X500-DN-Marpa-1.00.zip
+shell>ppm install --location=. X500-DN-Marpa
+shell>del X500-DN-Marpa-1.00.ppd
+shell>del PPM-X500-DN-Marpa-1.00.tar.gz
