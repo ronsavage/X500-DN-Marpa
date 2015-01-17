@@ -76,19 +76,19 @@ for my $text (@text)
 		$count{success}++;
 
 		$dn             = $parser -> dn;
+		$get_openssl_dn = $parser -> openssl_dn;
+		$get_rdn        = $parser -> rdn(1);
 		$get_count      = $parser -> rdn_count(1);
 		$get_number     = $parser -> rdn_number;
-		$get_rdn        = $parser -> rdn(1);
 		$get_type       = $parser -> rdn_type(1);
 		$get_types      = join(' ', $parser -> rdn_types(1) );
 		$get_value      = $parser -> rdn_value(1);
-		@get_values     = $parser -> rdn_values($expected{$count{total} }{values_for}) || '';
-		$get_openssl_dn = $parser -> openssl_dn;
+		@get_values     = $parser -> rdn_values($expected{$count{total} }{values_for});
 
 		print "dn():         $dn (Expected: $expected{$count{total} }{dn})\n";
+		print "rdn(1):       $get_rdn (Expected: $expected{$count{total} }{rdn})\n";
 		print "rdn_count(1): $get_count (Expected: $expected{$count{total} }{rdn_count})\n";
 		print "rdn_number(): $get_number (Expected: $expected{$count{total} }{rdn_number})\n";
-		print "rdn(1):       $get_rdn (Expected: $expected{$count{total} }{rdn})\n";
 		print "rdn_type(1):  $get_type (Expected: $expected{$count{total} }{rdn_type})\n";
 		print "rdn_types(1): $get_types (Expected: $expected{$count{total} }{rdn_types})\n";
 		print "rdn_value(1): $get_value (Expected: $expected{$count{total} }{rdn_value})\n";
