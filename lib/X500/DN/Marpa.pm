@@ -1330,7 +1330,7 @@ Lightweight Directory Access Protocol (LDAP): Directory Information Models.
 L<RFC4517|https://www.ietf.org/rfc/rfc4517.txt>:
 Lightweight Directory Access Protocol (LDAP): Syntaxes and Matching Rules.
 
-L<RFC4234|https://www.ietf.org/rfc/rfc4234.txt>:
+L<RFC5234|https://www.ietf.org/rfc/rfc5234.txt>:
 Augmented BNF for Syntax Specifications: ABNF.
 
 L<RFC3629|https://www.ietf.org/rfc/rfc3629.txt>: UTF-8, a transformation format of ISO 10646.
