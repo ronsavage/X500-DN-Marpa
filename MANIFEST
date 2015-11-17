@@ -1,4 +1,3 @@
-.gitignore
 Changelog.ini
 Changes
 lib/X500/DN/Marpa.pm
