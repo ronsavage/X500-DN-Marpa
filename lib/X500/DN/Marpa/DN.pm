@@ -9,7 +9,7 @@ use Moo;
 
 use X500::DN::Marpa::RDN;
 
-our $VERSION = '0.81';
+our $VERSION = '0.82';
 
 # ------------------------------------------------
 

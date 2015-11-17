@@ -108,7 +108,7 @@ my(%descriptors) =
 	uid    => 'userId',
 );
 
-our $VERSION = '0.81';
+our $VERSION = '0.82';
 
 # ------------------------------------------------
 

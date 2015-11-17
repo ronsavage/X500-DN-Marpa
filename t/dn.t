@@ -275,9 +275,8 @@ for my $item (@text)
 	# Let's break up the OpenSSL DN and use the last RDN's type.
 	# We end up with the wanted $type in $temp[0].
 
-	@temp    = split(/\+/, $openssl_dn);
-	@temp    = split(/=/, $temp[$#temp]);
-	$temp[0] ||= '';
+	@temp = split(/\+/, $openssl_dn);
+	@temp = $#temp >= 0 ? split(/=/, $temp[$#temp]) : (''); # Special code for very 1st test case.
 
 	if ($test_count == 1)
 	{
