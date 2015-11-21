@@ -1,6 +1,6 @@
 Revision history for Perl extension X500::DN::Marpa.
 
-0.82  2015-11-17T20:42:31
+1.00  2015-11-17T20:42:31
 	- Fix t/dn.t to avoid an uninit warning for the deliberate error case.
 	- Remove Build.PL.
 

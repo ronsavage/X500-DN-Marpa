@@ -5,7 +5,7 @@ use utf8;
 use warnings;
 use warnings qw(FATAL utf8); # Fatalize encoding glitches.
 
-our $VERSION = '0.82';
+our $VERSION = '1.00';
 
 # ------------------------------------------------
 
