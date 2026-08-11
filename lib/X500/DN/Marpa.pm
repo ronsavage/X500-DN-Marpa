@@ -710,7 +710,7 @@ sub rdn_values
 
 =head1 NAME
 
-C<X500::DN::Marpa> - Parse X.500 DNs
+X500::DN::Marpa - Parse X.500 DNs
 
 =head1 Synopsis
 

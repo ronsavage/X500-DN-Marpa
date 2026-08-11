@@ -96,7 +96,7 @@ sub decode_result
 
 =head1 NAME
 
-C<X500::DN::Marpa::Actions> - Methods triggered by 'action' clauses in the grammar
+X500::DN::Marpa::Actions - Methods triggered by 'action' clauses in the grammar
 
 =head1 Synopsis
 

@@ -96,7 +96,7 @@ sub ParseRFC2253
 
 =head1 NAME
 
-C<X500::DN::Marpa::DN> - Backcompat module to emulate the DN part of C<X500::DN>
+X500::DN::Marpa::DN - Backcompat module to emulate the DN part of C<X500::DN>
 
 =head1 Synopsis
 

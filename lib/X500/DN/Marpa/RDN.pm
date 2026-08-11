@@ -43,7 +43,7 @@ sub getAttributeValue
 
 =head1 NAME
 
-C<X500::DN::Marpa::RDN> - Backcompat module to emulate the RDN part of C<X500::DN>
+X500::DN::Marpa::RDN - Backcompat module to emulate the RDN part of C<X500::DN>
 
 =head1 Synopsis
 
